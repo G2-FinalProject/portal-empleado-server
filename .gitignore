@@ -1,0 +1,22 @@
+node_modules
+.env
+.env.test
+.DS_Store
+dist
+.env.docker
+*.js
+*.js.map
+
+# Certificados / claves (ignora todo en certs/...)
+certs/*
+
+# ...pero NO ignores el CA público de TiDB (déjalo subir)
+!certs/tidb-ca.pem
+
+# Si tuvieras claves privadas, que sigan ignoradas
+*.key
+
+# Dumps y backups
+*.sql
+*.sql.gz
+*.dump
