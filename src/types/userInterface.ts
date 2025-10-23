@@ -11,6 +11,6 @@ export interface UserAttributes {
   available_days: number;
   created_at: Date;
   updated_at: Date;
-}
+} 
 
 export type UserCreationAttributes = Omit<UserAttributes, "id" | "created_at" | "update_at">;
