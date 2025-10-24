@@ -2,11 +2,13 @@ import 'reflect-metadata';
 import express from 'express';
 import { sequelize } from './database/db_connection.js'; // tu instancia única
 import  userRouter from "./routes/userRoutes.js"
+import authRouter from './routes/authRoutes.js';
 
 const app = express();
 
 app.use(express.json());
 app.use("/users", userRouter); 
+app.use("/auth", authRouter);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
@@ -19,7 +21,7 @@ async function bootstrap() {
     console.log('✅ Conexión exitosa a la base de datos');
 
     // Solo durante desarrollo
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: true });
 
     console.log('📦 Tablas sincronizadas');
 

@@ -1,6 +1,5 @@
 import  type { Request, Response } from "express";
 import {User} from "../models/userModel.js";
-import { Op } from 'sequelize'; // Para consultas con operadores, como 'LIKE' para buscar por email.
 import bcrypt from 'bcryptjs';
 import type {UserCreationAttributes} from "../types/userInterface.js";
 
@@ -35,7 +34,6 @@ export const getUserById = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error al obtener el usuario.' });
   }
 };
-
 
 // CREAR USUSARIO
 export const createUser = async (req: Request, res: Response) => {
