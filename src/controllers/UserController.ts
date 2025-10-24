@@ -5,12 +5,13 @@ import bcrypt from 'bcryptjs';
 import type {UserCreationAttributes} from "../types/userInterface.js";
 
 
-// 1. Obtener todos los usuarios
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.findAll({
-      include: ['role', 'department'], // Incluir la relación con 'role' y 'department'
+      attributes: { exclude: ['password_hash'] }, //  No enviamos la contraseña hasheada
+      include: ['role', 'department'], // Traemos los datos de rol y departamento
     });
+
     res.status(200).json(users);
   } catch (error) {
     console.error('Error al obtener los usuarios:', error);
@@ -18,8 +19,27 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ['password_hash'] },       //  nunca devolvemos el hash
+      include: ['role', 'department'],                  
+    });
+
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('Error al obtener el usuario:', error);
+    return res.status(500).json({ message: 'Error al obtener el usuario.' });
+  }
+};
+
+
+// CREAR USUSARIO
 export const createUser = async (req: Request, res: Response) => {
-  const { first_name, last_name, email, password, role_id, department_id } = req.body;
+  const { first_name, last_name, email, password, role_id, department_id, region, city} = req.body;
 
   try {
     // Verificar si el email ya está registrado
@@ -28,10 +48,10 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'El email ya está registrado.' });
     }
 
-    // Hashear la contraseña usando bcrypt
+    // Hashear la contraseña con bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear el nuevo usuario en la base de datos
+    // Crear el usuario
     const newUser = await User.create({
       first_name,
       last_name,
@@ -39,59 +59,81 @@ export const createUser = async (req: Request, res: Response) => {
       password_hash: hashedPassword,
       role_id,
       department_id,
-    } as UserCreationAttributes);  // Asegurándote de que se cumpla el tipo UserCreationAttributes
+      region, 
+      city    
+    } as UserCreationAttributes);
 
-    res.status(201).json(newUser); // Retornar el nuevo usuario creado
+    // Volvemos a consultar el usuario sin enviar el hash
+    const userResponse = await User.findByPk(newUser.id, {
+      attributes: { exclude: ['password_hash'] },
+      include: ['role', 'department'],
+    });
+
+    res.status(201).json(userResponse);
   } catch (error) {
     console.error('Error al crear el usuario:', error);
     res.status(500).json({ message: 'Error al crear el usuario.' });
   }
 };
-// 3. Actualizar un usuario
+
+
+// PATCH /users/:id
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { first_name, last_name, email, password, role_id, department_id } = req.body;
 
   try {
-    // Buscar el usuario por ID
+    // 1) Buscar el usuario
     const user = await User.findByPk(id);
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    // 2) Si me mandan email NUEVO distinto al actual, valido que no exista
+    if (email && email !== user.email) {
+      const exists = await User.findOne({ where: { email } });
+      if (exists) return res.status(400).json({ message: 'El email ya está en uso.' });
     }
 
-    // Si la contraseña fue enviada, la hasheamos
-    let updatedData: any = { first_name, last_name, email, role_id, department_id };
+    // 3) Construyo solo los campos que llegaron (evito meter undefined)
+    const updatedData: Record<string, unknown> = {};
+    if (first_name !== undefined) updatedData.first_name = first_name;
+    if (last_name  !== undefined) updatedData.last_name  = last_name;
+    if (email      !== undefined) updatedData.email      = email;
+    if (role_id    !== undefined) updatedData.role_id    = role_id;
+    if (department_id !== undefined) updatedData.department_id = department_id;
+
+    // 4) Si llegó password, la hasheo
     if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updatedData.password_hash = hashedPassword;
+      updatedData.password_hash = await bcrypt.hash(password, 10);
     }
 
-    // Actualizar el usuario
+    // 5) Actualizo
     await user.update(updatedData);
-    res.status(200).json(user); // Retornar el usuario actualizado
+
+    // 6) Respondo SIN el hash y con relaciones (listo para el front)
+    const safeUser = await User.findByPk(id, {
+      attributes: { exclude: ['password_hash'] },
+      include: ['role', 'department'],
+    });
+
+    return res.status(200).json(safeUser);
   } catch (error) {
     console.error('Error al actualizar el usuario:', error);
-    res.status(500).json({ message: 'Error al actualizar el usuario.' });
+    return res.status(500).json({ message: 'Error al actualizar el usuario.' });
   }
 };
 
-// 4. Eliminar un usuario
+//  DELETE /users/:id  =====
 export const deleteUser = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
   try {
-    // Buscar el usuario por ID
-    const user = await User.findByPk(id);
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
-    }
+    const { id } = req.params;
 
-    // Eliminar el usuario de la base de datos
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
     await user.destroy();
-    res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
+    return res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
-    res.status(500).json({ message: 'Error al eliminar el usuario.' });
+    return res.status(500).json({ message: 'Error al eliminar el usuario.' });
   }
 };
-

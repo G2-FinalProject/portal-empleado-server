@@ -1,11 +1,17 @@
 import 'reflect-metadata';
 import express from 'express';
 import { sequelize } from './database/db_connection.js'; // tu instancia única
+import  userRouter from "./routes/userRoutes.js"
 
 const app = express();
+
+app.use(express.json());
+app.use("/users", userRouter); 
+
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
+
 
 async function bootstrap() {
   try {
