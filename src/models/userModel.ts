@@ -1,8 +1,10 @@
 import {
-  Table, Column, Model, PrimaryKey, AutoIncrement, DataType, HasMany
+  Table, Column, Model, PrimaryKey, AutoIncrement, DataType, HasMany, BelongsTo, AllowNull, ForeignKey
 } from 'sequelize-typescript';
 import type { UserAttributes, UserCreationAttributes } from '../types/userInterface.js';
 import { VacationRequest } from './vacationRequestModel.js';
+import { Department } from './departmentModel.js';
+import { Role } from './roleModel.js';
 
 @Table({ tableName: 'users', timestamps: true, underscored: true })
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -24,11 +26,21 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   @Column({ allowNull: false, type: DataType.STRING(255) })
   declare password_hash: string;
 
-  @Column({ allowNull: false, type: DataType.INTEGER })
+  @ForeignKey(() => Role)
+  @AllowNull(false)
+  @Column({ type: DataType.INTEGER })
   declare role_id: number;
 
-  @Column({ allowNull: false, type: DataType.INTEGER })
+  @BelongsTo(() => Role)
+  declare role: Role;
+
+  @ForeignKey(() => Department)
+  @AllowNull(false)
+  @Column({ type: DataType.INTEGER })
   declare department_id: number;
+
+  @BelongsTo(() => Department)
+  declare department: Department;
 
   @Column({ allowNull: false, type: DataType.STRING(255) })
   declare region: string;
