@@ -12,8 +12,9 @@ async function bootstrap() {
     await sequelize.authenticate();
     console.log('✅ Conexión exitosa a la base de datos');
 
-    // Solo durante desarrollo, si quieres crear/actualizar tablas:
+    // Solo durante desarrollo
     await sequelize.sync({ alter: true });
+
     console.log('📦 Tablas sincronizadas');
 
     app.listen(PORT, () =>
@@ -27,7 +28,6 @@ async function bootstrap() {
 
 bootstrap();
 
-// Cierre ordenado cuando pares el proceso
 process.on('SIGINT', async () => {
   console.log('\n🔌 Cerrando conexión…');
   await sequelize.close().catch(() => {});
