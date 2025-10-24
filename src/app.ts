@@ -21,11 +21,11 @@ async function bootstrap() {
     console.log('✅ Conexión exitosa a la base de datos');
 
     // Solo durante desarrollo
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter : true });
 
     console.log('📦 Tablas sincronizadas');
 
-    app.listen(PORT, () =>
+       app.listen(PORT, () =>
       console.log(`Servidor escuchando en http://localhost:${PORT}`)
     );
   } catch (err) {
