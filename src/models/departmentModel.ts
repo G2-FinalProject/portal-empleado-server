@@ -6,7 +6,7 @@ import type { DepartmentAttributes, DepartmentCreationAttributes } from '../type
 import { User } from './userModel.js';
 
 @Table({
-  tableName: 'department',
+  tableName: 'departments',
   timestamps: true,
   underscored: true,
 })
@@ -22,7 +22,7 @@ export class Department
   declare department_name: string;
 
   @ForeignKey(() => User)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column({ type: DataType.INTEGER })
   declare manager_id: number;
 

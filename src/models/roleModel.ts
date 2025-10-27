@@ -5,7 +5,7 @@ import type { RoleAttributes, RoleCreationAttributes } from '../types/roleInterf
 import { User } from './userModel.js';
 
 @Table({
-  tableName: 'role',
+  tableName: 'roles',
   timestamps: true,
   underscored: true,
 })

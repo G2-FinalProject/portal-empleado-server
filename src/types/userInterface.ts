@@ -5,12 +5,10 @@ export interface UserAttributes {
   email: string;
   password_hash: string;
   role_id: number;
-  department_id: number;
-  region: string;
-  city: string;
+  department_id: number; 
   available_days: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export type UserCreationAttributes = Omit<UserAttributes, "id" | "created_at" | "update_at">;
