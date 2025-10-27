@@ -1,11 +1,17 @@
 import 'reflect-metadata';
 import express from 'express';
 import { sequelize } from './database/db_connection.js'; // tu instancia única
+import roleRoutes from "./routes/roleRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
+// 🧩 Middleware para leer JSON
+app.use(express.json());
+
+// 🌐 Rutas
 app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
+app.use('/roles', roleRoutes);
 
 async function bootstrap() {
   try {
