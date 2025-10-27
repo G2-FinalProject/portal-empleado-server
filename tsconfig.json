@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "rootDir": "./src",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "rootDir": "./",
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
@@ -11,20 +11,13 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": true,
-    "isolatedModules": false,
-
-
+    "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "moduleDetection": "force",
-    //  desactiva estas dos para evitar choque con reflect-metadata y decoradores
-    
-    // "noUncheckedSideEffectImports": false,
-    "types": [
-      "node"
-    ]
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "test/**/*", "dist"]
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist"]
 }
