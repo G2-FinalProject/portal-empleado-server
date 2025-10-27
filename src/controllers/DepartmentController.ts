@@ -46,6 +46,23 @@ export const getAllDepartments = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error al obtener los departamentos.' });
   }
 };
+// GET /departments/:id
+export const getDepartmentById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const department = await Department.findByPk(id, {
+      include: ['manager', 'users'] // Incluimos mánager y empleados
+    });
+
+    if (!department) {
+      return res.status(404).json({ message: 'Departamento no encontrado.' });
+    }
+    res.status(200).json(department);
+  } catch (error) {
+    console.error('Error al obtener el departamento:', error);
+    res.status(500).json({ message: 'Error al obtener el departamento.' });
+  }
+};
 
 //ACTUALIZAR un Departamento
 export const updateDepartment = async (req: Request, res: Response) => {
@@ -59,7 +76,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Departamento no encontrado.' });
     }
 
-    // 2. La validación (si el nombre ya existe) la hace el validador.
+    //  La validación (si el nombre ya existe) la hace el validador.
     // Aquí solo actualizamos los campos que nos llegan.
     if (department_name !== undefined) {
       department.department_name = department_name;

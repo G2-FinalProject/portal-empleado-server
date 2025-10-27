@@ -3,12 +3,14 @@ import express from 'express';
 import { sequelize } from './database/db_connection.js'; // tu instancia única
 import  userRouter from "./routes/userRoutes.js"
 import authRouter from './routes/authRoutes.js';
+import departmentRouter from './routes/departmentRoutes.js';
 
 const app = express();
 
 app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/auth", authRouter);
+app.use("/departments", departmentRouter);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
