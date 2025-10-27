@@ -8,7 +8,7 @@ export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.findAll({
       attributes: { exclude: ['password_hash'] }, //  No enviamos la contraseña hasheada
-      include: ['role', 'department'], // Traemos los datos de rol y departamento
+      include: ['role', 'department', 'location'], // Traemos los datos de rol y departamento y location
     });
 
     res.status(200).json(users);
@@ -24,7 +24,7 @@ export const getUserById = async (req: Request, res: Response) => {
 
     const user = await User.findByPk(id, {
       attributes: { exclude: ['password_hash'] },       //  nunca devolvemos el hash
-      include: ['role', 'department'],                  
+      include: ['role', 'department', 'location'],                  
     });
 
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
@@ -37,7 +37,7 @@ export const getUserById = async (req: Request, res: Response) => {
 
 // CREAR USUSARIO
 export const createUser = async (req: Request, res: Response) => {
-  const { first_name, last_name, email, password, role_id, department_id, region, city} = req.body;
+  const { first_name, last_name, email, password, role_id, department_id, location_id} = req.body;
 
   try {
     // Verificar si el email ya está registrado
@@ -50,21 +50,19 @@ export const createUser = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Crear el usuario
-    const newUser = await User.create({
+   const newUser = await User.create({
       first_name,
       last_name,
       email,
       password_hash: hashedPassword,
       role_id,
       department_id,
-      region, 
-      city    
-    } as UserCreationAttributes);
-
+      location_id  // <-- Este es el nuevo campo obligatorio
+    } as UserCreationAttributes); // <-- Asegúrate de que tu interface también esté actualizada
     // Volvemos a consultar el usuario sin enviar el hash
     const userResponse = await User.findByPk(newUser.id, {
       attributes: { exclude: ['password_hash'] },
-      include: ['role', 'department'],
+      include: ['role', 'department', 'location'],
     });
 
     res.status(201).json(userResponse);
@@ -78,8 +76,7 @@ export const createUser = async (req: Request, res: Response) => {
 // PATCH /users/:id
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { first_name, last_name, email, password, role_id, department_id } = req.body;
-
+ const { first_name, last_name, email, password, role_id, department_id, location_id } = req.body;
   try {
     // 1) Buscar el usuario
     const user = await User.findByPk(id);
@@ -98,6 +95,7 @@ export const updateUser = async (req: Request, res: Response) => {
     if (email      !== undefined) updatedData.email      = email;
     if (role_id    !== undefined) updatedData.role_id    = role_id;
     if (department_id !== undefined) updatedData.department_id = department_id;
+    if (location_id !== undefined) updatedData.location_id = location_id; 
 
     // 4) Si llegó password, la hasheo
     if (password) {
@@ -110,7 +108,7 @@ export const updateUser = async (req: Request, res: Response) => {
     // 6) Respondo SIN el hash y con relaciones (listo para el front)
     const safeUser = await User.findByPk(id, {
       attributes: { exclude: ['password_hash'] },
-      include: ['role', 'department'],
+      include: ['role', 'department', 'location'],
     });
 
     return res.status(200).json(safeUser);
