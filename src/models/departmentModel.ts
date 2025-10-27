@@ -22,7 +22,7 @@ export class Department
   declare department_name: string;
 
   @ForeignKey(() => User)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column({ type: DataType.INTEGER })
   declare manager_id: number;
 
