@@ -6,7 +6,7 @@ import type { DepartmentAttributes, DepartmentCreationAttributes } from '../type
 import { User } from './userModel.js';
 
 @Table({
-  tableName: 'department',
+  tableName: 'departments',
   timestamps: true,
   underscored: true,
 })
