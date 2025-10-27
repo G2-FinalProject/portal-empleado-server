@@ -31,10 +31,14 @@ export const login = async (req: Request, res: Response) => {
       id: user.id,
       role: user.role_id
     });
-     
-    const { password_hash, ...userResponse } = user.toJSON();// esto dice saca la contraseña y deja todo lo demas
 
-        res.status(200).json({ token, user: userResponse });
+    const sesionData = {
+      first_name : user.first_name,
+      role_id : user.role_id
+    }
+     
+  
+        res.status(200).json({ token, sesionData });
 
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
