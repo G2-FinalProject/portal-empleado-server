@@ -1,13 +1,21 @@
 import 'reflect-metadata';
 import express from 'express';
-import { sequelize } from './database/db_connection.js'; // tu instancia única
+import { sequelize } from './database/db_connection.js'; 
 import vacationRequestRoutes from "./routes/vacationRequestRoutes.js";
+import  userRouter from "./routes/userRoutes.js"
+import authRouter from './routes/authRoutes.js';
+import departmentRouter from './routes/departmentRoutes.js';
+
 
 const app = express();
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.use(express.json());
-app.use('/vacations', vacationRequestRoutes);
+app.use("/users", userRouter); 
+app.use("/auth", authRouter);
+app.use("/departments", departmentRouter);
+app.use('/vacations', vacationRequestRoutes)
+
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
 
@@ -16,12 +24,12 @@ async function bootstrap() {
     await sequelize.authenticate();
     console.log('✅ Conexión exitosa a la base de datos');
 
-    // Solo durante desarrollo
-    await sequelize.sync({ });
+    await sequelize.sync({ alter : true });
+
 
     console.log('📦 Tablas sincronizadas');
 
-    app.listen(PORT, () =>
+      app.listen(PORT, () =>
       console.log(`Servidor escuchando en http://localhost:${PORT}`)
     );
   } catch (err) {
