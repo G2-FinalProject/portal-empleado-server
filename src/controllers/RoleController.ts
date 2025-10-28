@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { Role } from "../models/roleModel.js";
 import { User } from "../models/userModel.js";
-import { validateRoleData, validateAssignData } from "../validators/roleValidation.js";
 
 /**
  * 📜 Obtener todos los roles
@@ -30,13 +29,6 @@ export const getAllRoles = async (_req: Request, res: Response) => {
 export const createRole = async (req: Request, res: Response) => {
   try {
     const { role_name } = req.body;
-    const error = validateRoleData(role_name);
-    if (error) return res.status(400).json({ error });
-
-    const existingRole = await Role.findOne({ where: { role_name } });
-    if (existingRole) {
-      return res.status(409).json({ error: "El rol ya existe" });
-    }
 
     const newRole = await Role.create({ role_name: role_name.trim() });
     return res.status(201).json({
@@ -56,8 +48,6 @@ export const updateRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { role_name } = req.body;
-    const error = validateRoleData(role_name);
-    if (error) return res.status(400).json({ error });
 
     const role = await Role.findByPk(id);
     if (!role) return res.status(404).json({ error: "Rol no encontrado" });
@@ -96,8 +86,6 @@ export const deleteRole = async (req: Request, res: Response) => {
 export const assignRoleToUser = async (req: Request, res: Response) => {
   try {
     const { userId, roleId } = req.body;
-    const error = validateAssignData(userId, roleId);
-    if (error) return res.status(400).json({ error });
 
     const user = await User.findByPk(userId);
     const role = await Role.findByPk(roleId);

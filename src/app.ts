@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import express from 'express';
 import { sequelize } from './database/db_connection.js'; // tu instancia única
-import roleRoutes from "./routes/roleRoutes.js";
+import * as roleRoutes from "./routes/roleRoutes.js";
+
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -11,7 +12,8 @@ app.use(express.json());
 
 // 🌐 Rutas
 app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
-app.use('/roles', roleRoutes);
+app.use("/roles", (roleRoutes as any).default);
+
 
 async function bootstrap() {
   try {
@@ -19,7 +21,7 @@ async function bootstrap() {
     console.log('✅ Conexión exitosa a la base de datos');
 
     // Solo durante desarrollo
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ });
 
     console.log('📦 Tablas sincronizadas');
 
