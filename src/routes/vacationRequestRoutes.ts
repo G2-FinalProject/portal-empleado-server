@@ -6,21 +6,14 @@ import {
   updateVacationRequest,
   deleteVacationRequest,
 } from "../controllers/VacationRequestController.js";
-import {
-  validateVacationBody,
-  validateVacationId,
-  validateUpdateBody,
-} from "../validators/vacationRequestValidator.js";
 
-const router = express.Router();
+const vacationRequestRouter = express.Router();
 
-/**
- * 🌴 Rutas para manejar solicitudes de vacaciones con validaciones detalladas
- */
-router.post("/", validateVacationBody, createVacationRequest);
-router.get("/", getAllVacationRequests);
-router.get("/:id", validateVacationId, getVacationRequestById);
-router.put("/:id", validateVacationId, validateUpdateBody, updateVacationRequest);
-router.delete("/:id", validateVacationId, deleteVacationRequest);
+// 🌴 Rutas para solicitudes de vacaciones
+vacationRequestRouter.get("/", getAllVacationRequests);
+vacationRequestRouter.get("/:id", getVacationRequestById);
+vacationRequestRouter.post("/", createVacationRequest);
+vacationRequestRouter.put("/:id", updateVacationRequest);
+vacationRequestRouter.delete("/:id", deleteVacationRequest);
 
-export default router;
+export default vacationRequestRouter;
