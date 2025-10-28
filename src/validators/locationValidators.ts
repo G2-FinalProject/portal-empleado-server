@@ -4,7 +4,7 @@ export const createLocationValidator = [
   body('location_name')
     .trim()
     .notEmpty().withMessage('location_name is required')
-    .isLength({ min: 2, max: 60 }).withMessage('location_name must have between 2 and 60 caraters'),
+    .isLength({ min: 2, max: 100 }).withMessage('location_name must have between 2 and 100 caraters'),
 ];
 
 export const updateLocationValidator = [
@@ -13,5 +13,5 @@ export const updateLocationValidator = [
     .optional()
     .trim()
     .notEmpty().withMessage('location_name no puede estar vacío')
-    .isLength({ min: 2, max: 255 }).withMessage('location_name must have between 2 and 60 caracters'),
+    .isLength({ min: 2, max: 100 }).withMessage('location_name must have between 2 and 100 caracters'),
 ];
