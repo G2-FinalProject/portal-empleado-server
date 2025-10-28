@@ -104,3 +104,22 @@ export const updateLocation = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error updating location." });
   }
 };
+
+// DELETEid
+export const deleteLocation = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const location = await Location.findByPk(id);
+    if (!location) {
+      return res.status(404).json({ message: "Location not found." });
+    }
+
+    // Delete 
+    await location.destroy();
+    res.status(200).json({ message: "Location deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting location:", error);
+    res.status(500).json({ message: "Error deleting location." });
+  }
+};
