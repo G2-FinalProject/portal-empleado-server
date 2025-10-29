@@ -7,7 +7,7 @@ import { isAuthenticated, hasRole } from '../middlewares/authMiddleware.js';
 const userRouter = express.Router();
 
 const checkAdmin = [isAuthenticated, hasRole(1)];
-const checkManager = [isAuthenticated, hasRole(2)]
+
 
 userRouter.get('/', checkAdmin, getUsers);
 
