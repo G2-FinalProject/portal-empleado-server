@@ -6,7 +6,9 @@ import vacationRequestRoutes from "./routes/vacationRequestRoutes.js";
 import  userRouter from "./routes/userRoutes.js"
 import authRouter from './routes/authRoutes.js';
 import departmentRouter from './routes/departmentRoutes.js';
+import locationRouter from './routes/locationRoutes.js';
 import HolidayRouter from './routes/holidayRoutes.js';
+
 
 
 const app = express();
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/auth", authRouter);
 app.use("/departments", departmentRouter);
+app.use("/locations", locationRouter);
 app.use('/vacations', vacationRequestRoutes);
 app.use('/roles', roleRouter);
 app.use('/holidays', HolidayRouter);
