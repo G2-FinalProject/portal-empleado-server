@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express from 'express';
+import cors from 'cors';
 import { sequelize } from './database/db_connection.js'; 
 import roleRouter from './routes/roleRoutes.js';
 import vacationRequestRoutes from "./routes/vacationRequestRoutes.js";
@@ -10,9 +11,9 @@ import locationRouter from './routes/locationRoutes.js';
 import HolidayRouter from './routes/holidayRoutes.js';
 
 
-
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/auth", authRouter);
@@ -32,7 +33,7 @@ async function bootstrap() {
     await sequelize.authenticate();
     console.log('✅ Conexión exitosa a la base de datos');
 
-    await sequelize.sync({ alter : true });
+    await sequelize.sync({ });
 
 
     console.log('📦 Tablas sincronizadas');
