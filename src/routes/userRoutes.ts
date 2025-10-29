@@ -1,16 +1,22 @@
 import express  from 'express';
 import { getUsers, getUserById, createUser, updateUser, deleteUser } from '../controllers/UserController.js';
+import { createUserRules, updateUserRules } from '../validators/userValidators.js';
+import { handleValidationErrors } from '../middlewares/validationErrorHandler.js';
+import { isAuthenticated, hasRole } from '../middlewares/authMiddleware.js';
 
 const userRouter = express.Router();
 
-userRouter.get('/', getUsers);
+const checkAdmin = [isAuthenticated, hasRole(1)];
+const checkManager = [isAuthenticated, hasRole(2)]
 
-userRouter.get('/:id', getUserById);
+userRouter.get('/', checkAdmin, getUsers);
 
-userRouter.post('/', createUser);
+userRouter.get('/:id', checkAdmin, getUserById);
 
-userRouter.patch('/:id', updateUser);
+userRouter.post('/',checkAdmin, createUserRules, handleValidationErrors, createUser);
 
-userRouter.delete('/:id', deleteUser);
+userRouter.patch('/:id', checkAdmin, updateUserRules, handleValidationErrors, updateUser);
+
+userRouter.delete('/:id', checkAdmin, deleteUser);
 
 export default userRouter; 
