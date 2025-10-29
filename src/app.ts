@@ -6,6 +6,7 @@ import vacationRequestRoutes from "./routes/vacationRequestRoutes.js";
 import  userRouter from "./routes/userRoutes.js"
 import authRouter from './routes/authRoutes.js';
 import departmentRouter from './routes/departmentRoutes.js';
+import HolidayRouter from './routes/holidayRoutes.js';
 
 
 const app = express();
@@ -16,6 +17,7 @@ app.use("/auth", authRouter);
 app.use("/departments", departmentRouter);
 app.use('/vacations', vacationRequestRoutes);
 app.use('/roles', roleRouter);
+app.use('/holidays', HolidayRouter);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
