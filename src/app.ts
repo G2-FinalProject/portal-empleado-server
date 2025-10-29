@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import express from 'express';
 import { sequelize } from './database/db_connection.js'; 
+import roleRouter from './routes/roleRoutes.js';
 import vacationRequestRoutes from "./routes/vacationRequestRoutes.js";
 import  userRouter from "./routes/userRoutes.js"
 import authRouter from './routes/authRoutes.js';
@@ -13,9 +14,11 @@ app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/auth", authRouter);
 app.use("/departments", departmentRouter);
-app.use('/vacations', vacationRequestRoutes)
+app.use('/vacations', vacationRequestRoutes);
+app.use('/roles', roleRouter);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+
 
 app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
 
