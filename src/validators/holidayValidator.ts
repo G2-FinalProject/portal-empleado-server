@@ -1,13 +1,4 @@
-import { body, param, validationResult } from "express-validator";
-
-// Common validation result handler
-export const handleValidation = (req: any, res: any, next: any) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
-  return next();
-};
+import { body, param } from "express-validator";
 
 /** POST /holidays */
 export const createHolidayValidator = [
@@ -23,7 +14,6 @@ export const createHolidayValidator = [
   body("location_id")
     .isInt({ gt: 0 }).withMessage("location_id must be a positive integer"),
 
-  handleValidation,
 ];
 
 /** PATCH /holidays/:id */
@@ -45,12 +35,11 @@ export const updateHolidayValidator = [
     .optional({ nullable: true })
     .isInt({ gt: 0 }).withMessage("location_id must be a positive integer"),
 
-  handleValidation,
 ];
 
 /** GET/DELETE /holidays/:id */
 export const idParamValidator = [
   param("id")
     .isInt({ gt: 0 }).withMessage("id must be a positive integer"),
-  handleValidation,
+
 ];
