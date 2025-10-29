@@ -1,62 +1,61 @@
 import { body } from "express-validator";
 import { Role } from "../models/roleModel.js";
-import { User } from "../models/userModel.js";
-import type { RoleCreationAttributes } from "../types/roleInterface.js"; // ✅ sin .js
+import { User } from "../models/userModel.js"
 
-/**
- * 🛠️ Reglas para crear un rol
- */
+// 🔹 Crear un rol
 export const createRoleRules = [
   body("role_name")
     .notEmpty().withMessage("El nombre del rol es obligatorio.")
     .isString().withMessage("El nombre del rol debe ser texto.")
     .isLength({ min: 3, max: 50 })
-      .withMessage("El nombre del rol debe tener entre 3 y 50 caracteres.")
-    .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
-      .withMessage("El nombre del rol solo puede contener letras y espacios.")
-    .custom(async (name: RoleCreationAttributes["role_name"]) => {
+    .withMessage("El nombre del rol debe tener entre 3 y 50 caracteres.")
+    .custom(async (name) => {
       const existing = await Role.findOne({ where: { role_name: name } });
-      if (existing) return Promise.reject("El rol ya existe.");
+      if (existing) {
+        return Promise.reject("El nombre del rol ya está en uso.");
+      }
     }),
 ];
 
-/**
- * ✏️ Reglas para actualizar un rol
- */
+// 🔹 Actualizar un rol
 export const updateRoleRules = [
   body("role_name")
     .optional()
     .isString().withMessage("El nombre del rol debe ser texto.")
     .isLength({ min: 3, max: 50 })
-      .withMessage("El nombre del rol debe tener entre 3 y 50 caracteres.")
-    .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
-      .withMessage("El nombre del rol solo puede contener letras y espacios.")
-    .custom(async (name: RoleCreationAttributes["role_name"], { req }: { req: any }) => {
+    .withMessage("El nombre del rol debe tener entre 3 y 50 caracteres.")
+    .custom(async (name, { req }) => {
       const id = req.params?.id;
-      const existing = await Role.findOne({ where: { role_name: name } });
-      if (existing && id && existing.id !== Number(id)) {
+      const role = await Role.findOne({ where: { role_name: name } });
+      if (role && id && role.id !== Number(id)) {
         return Promise.reject("El nombre del rol ya está en uso por otro rol.");
       }
     }),
 ];
 
-/**
- * 👥 Reglas para asignar un rol a un usuario
- */
+// 🔹 Asignar un rol a un usuario
 export const assignRoleRules = [
   body("userId")
-    .notEmpty().withMessage("El userId es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El userId debe ser un número entero positivo.")
-    .custom(async (userId: number) => {
+    .notEmpty().withMessage("El campo userId es obligatorio.")
+    .isInt({ min: 1 }).withMessage("El userId debe ser un número positivo.")
+    .bail()
+    .custom(async (userId) => {
       const user = await User.findByPk(userId);
-      if (!user) return Promise.reject("Usuario no encontrado.");
+      if (!user) {
+        throw new Error("El usuario especificado no existe.");
+      }
+      return true;
     }),
 
   body("roleId")
-    .notEmpty().withMessage("El roleId es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El roleId debe ser un número entero positivo.")
-    .custom(async (roleId: number) => {
+    .notEmpty().withMessage("El campo roleId es obligatorio.")
+    .isInt({ min: 1 }).withMessage("El roleId debe ser un número positivo.")
+    .bail()
+    .custom(async (roleId) => {
       const role = await Role.findByPk(roleId);
-      if (!role) return Promise.reject("Rol no encontrado.");
+      if (!role) {
+        throw new Error("El rol especificado no existe.");
+      }
+      return true;
     }),
 ];
