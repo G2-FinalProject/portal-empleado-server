@@ -146,5 +146,21 @@ export const updateHoliday = async (req: Request, res: Response) => {
     }
 };
 
+export const deleteHoliday = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const holiday = await Holiday.findByPk(id);
+        if (!holiday) {
+            return res.status(404).json({ message: "Holiday not found." });
+        }
+
+        await holiday.destroy();
+        res.status(200).json({ message: "Holiday deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting holiday:", error);
+        res.status(500).json({ message: "Error deleting holiday." });
+    }
+};
 
 
