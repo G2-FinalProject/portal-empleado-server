@@ -5,20 +5,26 @@ import {
   getVacationRequestById,
   updateVacationRequest,
   deleteVacationRequest,
+  getVacationSummary,
 } from "../controllers/VacationRequestController.js";
 
+import {
+  createVacationRequestRules,
+  updateVacationRequestRules,
+  deleteVacationRequestRules,
+  getVacationSummaryRules,
+} from "../validators/vacationRequestValidator.js";
+
 import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
-import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
 
+const router = express.Router();
 
-const vacationRequestRouter = express.Router();
-const checkAuth = [isAuthenticated];
+// 🌴 Rutas para solicitudes de vacaciones
+router.get("/", getAllVacationRequests);
+router.get("/:id", getVacationRequestById);
+router.post("/", createVacationRequestRules, handleValidationErrors, createVacationRequest);
+router.put("/:id", updateVacationRequestRules, handleValidationErrors, updateVacationRequest);
+router.delete("/:id", deleteVacationRequestRules, handleValidationErrors, deleteVacationRequest);
+router.get("/:id/summary", getVacationSummaryRules, handleValidationErrors, getVacationSummary);
 
-
-vacationRequestRouter.get("/", checkAuth, getAllVacationRequests);
-vacationRequestRouter.get("/:id", checkAuth, getVacationRequestById);
-vacationRequestRouter.post("/", checkAuth, handleValidationErrors, createVacationRequest);
-vacationRequestRouter.put("/:id", checkAuth, handleValidationErrors, updateVacationRequest);
-vacationRequestRouter.delete("/:id",checkAuth,  deleteVacationRequest);
-
-export default vacationRequestRouter;
+export default router;
