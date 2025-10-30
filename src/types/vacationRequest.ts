@@ -7,10 +7,14 @@ export interface VacationRequestAttributes {
   end_date: Date;
   requested_days: number;
   request_status: VacationStatus;  //  usa el tipo aquí
-  comments: string | null;
+  requester_comment: string | null;
+  approver_comment: string | null;
   created_at: Date;
   updated_at: Date;
 }
 
 export type VacationRequestCreationAttributes =
-  Omit<VacationRequestAttributes, 'id' | 'created_at' | 'updated_at'>;
+  Omit<VacationRequestAttributes, 'id' | 'created_at' | 'updated_at'> & {
+    requester_comment?: string | null; 
+    approver_comment?: string | null;
+  };
