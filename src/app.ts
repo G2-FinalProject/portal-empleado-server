@@ -9,11 +9,14 @@ import authRouter from './routes/authRoutes.js';
 import departmentRouter from './routes/departmentRoutes.js';
 import locationRouter from './routes/locationRoutes.js';
 import HolidayRouter from './routes/holidayRoutes.js';
-
+import config from './config/config.js';
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: config.cors.corsOrigin 
+};
+app.use(cors(corsOptions)); 
 app.use(express.json());
 app.use("/users", userRouter); 
 app.use("/auth", authRouter);
