@@ -8,7 +8,16 @@ import { Role } from '../models/roleModel.js';
 import { Location } from '../models/locationModel.js';
 
 
-const db = config.development;
+// const db = config.development;
+
+const env = (process.env.NODE_ENV || 'development') as 'development' | 'test';
+
+
+const db = config[env]; 
+
+if (!db) {
+  throw new Error(`Configuración para el entorno '${env}' no encontrada.`);
+}
 
 export const sequelize = new Sequelize({
   database: db.database,

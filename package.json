@@ -12,6 +12,7 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.9.1",
+    "@types/supertest": "^6.0.3",
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "supertest": "^7.1.4",
@@ -35,12 +36,11 @@
     "sequelize": "^6.37.7",
     "sequelize-typescript": "^2.1.6",
     "zod": "^4.1.12"
-  },
-  "scripts": {
-    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --runInBand --no-cache --detectOpenHandles",
+  },"scripts": {
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js --runInBand --no-cache --detectOpenHandles",
     "dev": "tsx watch src/app.ts",
-    "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.ts --watch --runInBand --no-cache --detectOpenHandles",
-    "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.ts --coverage --runInBand --no-cache --detectOpenHandles"
+    "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js --watch --runInBand --no-cache --detectOpenHandles",
+    "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js --coverage --runInBand --no-cache --detectOpenHandles"
   },
   "repository": {
     "type": "git",

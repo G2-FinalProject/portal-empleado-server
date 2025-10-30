@@ -37,13 +37,12 @@ async function bootstrap() {
     console.log('✅ Conexión exitosa a la base de datos');
 
     await sequelize.sync({ });
-
-
     console.log('📦 Tablas sincronizadas');
-
+if (process.env.NODE_ENV !== 'test') {
       app.listen(PORT, () =>
-      console.log(`Servidor escuchando en http://localhost:${PORT}`)
-    );
+        console.log(`Servidor escuchando en http://localhost:${PORT}`)
+      );
+    }
   } catch (err) {
     console.error('❌ Error al conectar con la base de datos:', err);
     process.exit(1);
@@ -57,3 +56,5 @@ process.on('SIGINT', async () => {
   await sequelize.close().catch(() => {});
   process.exit(0);
 });
+
+export { app };

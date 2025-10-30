@@ -11,8 +11,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": true,
-    "isolatedModules": false,
-
+    "isolatedModules": true, //Debe ser 'true' para ts-jest
+    "allowSyntheticDefaultImports": true,
 
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -22,9 +22,10 @@
     
     // "noUncheckedSideEffectImports": false,
     "types": [
-      "node"
+      "node",
+      "jest"
     ]
   },
-  "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx", "test/**/*"],
   "exclude": ["node_modules", "test/**/*", "dist"]
 }
