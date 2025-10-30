@@ -10,7 +10,7 @@ import type {
 import { User } from './userModel.js';
 
 @Table({
-  tableName: 'vacation_request',
+  tableName: 'vacation_requests',
   timestamps: true,
   underscored: true,
 })
@@ -44,7 +44,12 @@ export class VacationRequest
 
   @AllowNull(true)
   @Column({ type: DataType.STRING(255) })
-  declare comments: string | null;
+  declare requester_comment: string | null;
+
+   @AllowNull(true)
+  @Column({ type: DataType.STRING(255) })
+  declare approver_comment: string | null;
+
 
   @Column({ type: DataType.DATE })
   declare created_at: Date;
