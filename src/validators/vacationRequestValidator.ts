@@ -1,17 +1,17 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { User } from "../models/userModel.js";
 
 /**
- * ✅ Validadores para las solicitudes de vacaciones
+ * 🧩 Validaciones para crear una solicitud de vacaciones
  */
-
-/* -------------------------------------------------------
-   🟢 Crear nueva solicitud de vacaciones
-------------------------------------------------------- */
 export const createVacationRequestRules = [
+  // 🔸 requester_id (debe existir y ser válido)
   body("requester_id")
-    .notEmpty().withMessage("El campo requester_id es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El requester_id debe ser un número entero positivo.")
+    .notEmpty()
+    .withMessage("El ID del solicitante es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El ID del solicitante debe ser un número positivo.")
+    .bail()
     .custom(async (id) => {
       const user = await User.findByPk(id);
       if (!user) {
@@ -19,64 +19,87 @@ export const createVacationRequestRules = [
       }
     }),
 
+  // 🔸 start_date (formato de fecha ISO)
   body("start_date")
-    .notEmpty().withMessage("La fecha de inicio es obligatoria.")
-    .isISO8601().withMessage("La fecha de inicio debe tener formato YYYY-MM-DD."),
+    .notEmpty()
+    .withMessage("La fecha de inicio es obligatoria.")
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
 
+  // 🔸 end_date (formato y orden)
   body("end_date")
-    .notEmpty().withMessage("La fecha de fin es obligatoria.")
-    .isISO8601().withMessage("La fecha de fin debe tener formato YYYY-MM-DD."),
+    .notEmpty()
+    .withMessage("La fecha de fin es obligatoria.")
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD).")
+    .bail()
+    .custom((end_date, { req }) => {
+      const { start_date } = req.body;
+      if (new Date(end_date) < new Date(start_date)) {
+        throw new Error("La fecha de fin no puede ser anterior a la fecha de inicio.");
+      }
+      return true;
+    }),
 
+  // 🔸 requested_days (debe ser número y positivo)
   body("requested_days")
-    .notEmpty().withMessage("El número de días solicitados es obligatorio.")
-    .isInt({ min: 1 }).withMessage("Los días solicitados deben ser un número entero positivo."),
+    .notEmpty()
+    .withMessage("Debe indicar la cantidad de días solicitados.")
+    .isInt({ min: 1 })
+    .withMessage("Los días solicitados deben ser un número positivo.")
+    .bail()
+    .custom(async (requested_days, { req }) => {
+      const user = await User.findByPk(req.body.requester_id);
+      if (!user) return true;
 
-  body("requester_comment")
+      const available_days = user.available_days ?? 0;
+      if (requested_days > available_days) {
+        throw new Error(
+          `No puedes solicitar ${requested_days} días. Solo tienes ${available_days} disponibles.`
+        );
+      }
+
+      return true;
+    }),
+
+  // 🔸 requester_comment (opcional pero limitado)
+  body("comments")
     .optional()
-    .isString().withMessage("El comentario debe ser texto.")
-    .isLength({ max: 255 }).withMessage("El comentario no puede superar los 255 caracteres."),
+    .isString()
+    .withMessage("El comentario debe ser texto.")
+    .isLength({ max: 255 })
+    .withMessage("El comentario no puede superar los 255 caracteres."),
 ];
 
-/* -------------------------------------------------------
-   🟠 Actualizar solicitud de vacaciones
-------------------------------------------------------- */
+/**
+ * 📝 Validaciones para actualizar una solicitud
+ */
 export const updateVacationRequestRules = [
-  param("id")
-    .notEmpty().withMessage("El ID de la solicitud es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El ID debe ser un número válido."),
-
   body("start_date")
     .optional()
-    .isISO8601().withMessage("La fecha de inicio debe tener formato YYYY-MM-DD."),
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
 
   body("end_date")
     .optional()
-    .isISO8601().withMessage("La fecha de fin debe tener formato YYYY-MM-DD."),
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD).")
+    .custom((end_date, { req }) => {
+      if (req.body.start_date && new Date(end_date) < new Date(req.body.start_date)) {
+        throw new Error("La fecha de fin no puede ser anterior a la fecha de inicio.");
+      }
+      return true;
+    }),
 
   body("requested_days")
     .optional()
-    .isInt({ min: 1 }).withMessage("Los días solicitados deben ser un número entero positivo."),
+    .isInt({ min: 1 })
+    .withMessage("Los días solicitados deben ser un número positivo."),
 
-  body("requester_comment")
+  body("comments")
     .optional()
-    .isString().withMessage("El comentario debe ser texto.")
-    .isLength({ max: 255 }).withMessage("El comentario no puede superar los 255 caracteres."),
-];
-
-/* -------------------------------------------------------
-   🔴 Eliminar solicitud de vacaciones
-------------------------------------------------------- */
-export const deleteVacationRequestRules = [
-  param("id")
-    .notEmpty().withMessage("El ID de la solicitud es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El ID debe ser un número válido."),
-];
-
-/* -------------------------------------------------------
-   🧮 Obtener resumen de vacaciones (Issue #8)
-------------------------------------------------------- */
-export const getVacationSummaryRules = [
-  param("id")
-    .notEmpty().withMessage("El ID del usuario es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El ID debe ser un número válido."),
+    .isString()
+    .withMessage("El comentario debe ser texto.")
+    .isLength({ max: 255 })
+    .withMessage("El comentario no puede superar los 255 caracteres."),
 ];
