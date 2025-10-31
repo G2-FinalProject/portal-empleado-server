@@ -7,7 +7,8 @@ import { User } from "../models/userModel.js";
  */
 export const createVacationRequest = async (req: Request, res: Response) => {
   try {
-    const { requester_id, start_date, end_date, requested_days, requester_comment } = req.body;
+    const requester_id = req.user!.id;
+    const {start_date, end_date, requested_days, comments } = req.body;
 
     // Validar campos obligatorios
     if (!requester_id || !start_date || !end_date || !requested_days) {
@@ -51,8 +52,8 @@ export const createVacationRequest = async (req: Request, res: Response) => {
       start_date,
       end_date,
       requested_days,
-      request_status: "pending",
-      requester_comment: requester_comment || null,
+      requester_comment: comments || null, 
+      request_status: "pending" satisfies VacationStatus,
     });
 
     return res.status(201).json({
@@ -117,11 +118,13 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Solicitud no encontrada." });
     }
 
-    if (request.request_status !== "pending") {
-      return res.status(400).json({
-        message: "Solo se pueden modificar solicitudes pendientes.",
-      });
-    }
+    await request.update({
+      start_date,
+      end_date,
+      requested_days,
+      request_status,
+     requester_comment: comments,
+    });
 
     request.start_date = start_date || request.start_date;
     request.end_date = end_date || request.end_date;
