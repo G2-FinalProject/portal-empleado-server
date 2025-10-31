@@ -57,7 +57,14 @@ export const getAllVacationRequests = async (_req: Request, res: Response) => {
         {
           model: User,
           as: "requester",
-          attributes: ["id", "first_name", "last_name", "email", "region", "city"],
+          attributes: ["id",
+            "first_name",
+            "last_name",
+            "email",
+            "available_days",
+            "department_id",
+            "location_id",
+            "role_id"],
         },
       ],
       order: [["created_at", "DESC"]],
@@ -65,8 +72,11 @@ export const getAllVacationRequests = async (_req: Request, res: Response) => {
 
     res.status(200).json(requests);
   } catch (error: any) {
-    console.error("❌ Error al obtener solicitudes:", error);
-    res.status(500).json({ message: "Error al obtener las solicitudes." });
+  console.error("❌ Error al obtener solicitudes:", error.message || error);
+  res.status(500).json({ 
+    message: "Error al obtener las solicitudes.",
+    error: error.message || error 
+  });
   }
 };
 
