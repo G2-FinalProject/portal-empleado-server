@@ -9,14 +9,15 @@ import type { VacationStatus } from "../types/vacationRequest.js";
  */
 export const createVacationRequest = async (req: Request, res: Response) => {
   try {
-    const { requester_id, start_date, end_date, requested_days, comments } = req.body;
+    const requester_id = req.user!.id;
+    const {start_date, end_date, requested_days, comments } = req.body;
 
     const newRequest = await VacationRequest.create({
       requester_id,
       start_date,
       end_date,
       requested_days,
-      comments: comments || null,
+      requester_comment: comments || null, 
       request_status: "pending" satisfies VacationStatus,
     });
 
@@ -96,7 +97,7 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
       end_date,
       requested_days,
       request_status,
-      comments,
+     requester_comment: comments,
     });
 
     res.status(200).json(request);
