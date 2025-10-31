@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { VacationRequest } from "../models/vacationRequestModel.js";
 import { User } from "../models/userModel.js";
+import type { VacationStatus } from "../types/vacationRequest.js";
 
 /**
  * 🧩 Crear una nueva solicitud de vacaciones (con control de saldo)
@@ -8,7 +9,7 @@ import { User } from "../models/userModel.js";
 export const createVacationRequest = async (req: Request, res: Response) => {
   try {
     const requester_id = req.user!.id;
-    const {start_date, end_date, requested_days, comments } = req.body;
+    const { start_date, end_date, requested_days, requester_comment } = req.body;
 
     // Validar campos obligatorios
     if (!requester_id || !start_date || !end_date || !requested_days) {
@@ -52,7 +53,7 @@ export const createVacationRequest = async (req: Request, res: Response) => {
       start_date,
       end_date,
       requested_days,
-      requester_comment: comments || null, 
+      requester_comment: requester_comment || null,
       request_status: "pending" satisfies VacationStatus,
     });
 
@@ -118,14 +119,14 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Solicitud no encontrada." });
     }
 
-    await request.update({
-      start_date,
-      end_date,
-      requested_days,
-      request_status,
-     requester_comment: comments,
-    });
+    // Solo se puede actualizar si sigue pendiente
+    if (request.request_status !== "pending") {
+      return res.status(400).json({
+        message: "Solo se pueden actualizar solicitudes pendientes.",
+      });
+    }
 
+    // Actualizar valores
     request.start_date = start_date || request.start_date;
     request.end_date = end_date || request.end_date;
     request.requested_days = requested_days || request.requested_days;
@@ -144,7 +145,7 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
 };
 
 /**
- * 🗑️ Eliminar una solicitud (sin restricción)
+ * 🗑️ Eliminar una solicitud 
  */
 export const deleteVacationRequest = async (req: Request, res: Response) => {
   try {
@@ -171,8 +172,6 @@ export const deleteVacationRequest = async (req: Request, res: Response) => {
 export const getVacationSummary = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
-    // Usuario autenticado (gracias a middleware isAuthenticated)
     const authUser = req.user;
 
     // 1️⃣ Autorización
@@ -202,8 +201,8 @@ export const getVacationSummary = async (req: Request, res: Response) => {
       0
     );
 
-    // Tomamos remaining_days directamente del usuario, si el manager lo ha actualizado
-    const remaining_days = user.available_days ?? Math.max(allowance_days - used_days, 0);
+    const remaining_days =
+      user.available_days ?? Math.max(allowance_days - used_days, 0);
 
     // 4️⃣ Respuesta final
     return res.status(200).json({
