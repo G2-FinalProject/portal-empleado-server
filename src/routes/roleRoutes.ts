@@ -7,14 +7,17 @@ import {
   deleteRole,
   assignRoleToUser,
 } from "../controllers/RoleController.js";
+import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
+import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
 
 const roleRouter = express.Router();
+const checkAdmin = [isAuthenticated, hasRole(1)];
 
-roleRouter.get("/", getAllRoles);
-roleRouter.get("/:id", getRoleById);
-roleRouter.post("/", createRole);
-roleRouter.patch("/:id", updateRole);
-roleRouter.delete("/:id", deleteRole);
-roleRouter.post("/assign", assignRoleToUser);
+roleRouter.get("/", checkAdmin, getAllRoles);
+roleRouter.get("/:id", checkAdmin, handleValidationErrors, getRoleById);
+roleRouter.post("/", checkAdmin, handleValidationErrors, createRole);
+roleRouter.patch("/:id", checkAdmin, handleValidationErrors, updateRole);
+roleRouter.delete("/:id", checkAdmin, handleValidationErrors, deleteRole);
+roleRouter.post("/assign", checkAdmin, handleValidationErrors, assignRoleToUser);
 
 export default roleRouter;
