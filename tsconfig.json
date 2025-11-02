@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
@@ -11,21 +11,18 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": true,
-    "isolatedModules": true, //Debe ser 'true' para ts-jest
-    "allowSyntheticDefaultImports": true,
-
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    //  desactiva estas dos para evitar choque con reflect-metadata y decoradores
     
-    // "noUncheckedSideEffectImports": false,
+    // CAMBIOS IMPORTANTES:
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true, // Arregla 'supertest' y 'bcrypt'
     "types": [
       "node",
-      "jest"
-    ]
+      "jest" // Le dice a TS qué son 'describe', 'it', 'expect'
+     
+    ],
+    "sourceMap": true
   },
-  "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx", "test/**/*"],
-  "exclude": ["node_modules", "test/**/*", "dist"]
+  
+  "include": ["src/**/*", "test/**/*", "database/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -12,7 +12,7 @@ export default {
   },
 
   test: {
-    database: 'vacation-portal-test', 
+    database: 'vacation_portal_test', 
     username: process.env['USER_DB']!,   
     password: process.env['PASSWORD_DB']!, 
     host: process.env['HOST']!,

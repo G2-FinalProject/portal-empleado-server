@@ -35,12 +35,13 @@ app.get('/', (_req, res) => res.send('Servidor funcionando 🚀'));
 
 async function bootstrap() {
   try {
+    if (process.env.NODE_ENV !== 'test') {
     await sequelize.authenticate();
     console.log('✅ Conexión exitosa a la base de datos');
 
     await sequelize.sync({ });
     console.log('📦 Tablas sincronizadas');
-if (process.env.NODE_ENV !== 'test') {
+
       app.listen(PORT, () =>
         console.log(`Servidor escuchando en http://localhost:${PORT}`)
       );
@@ -52,6 +53,8 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 bootstrap();
+
+
 
 process.on('SIGINT', async () => {
   console.log('\n🔌 Cerrando conexión…');

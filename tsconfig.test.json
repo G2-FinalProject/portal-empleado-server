@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["test/**/*", "src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -36,7 +36,8 @@
     "sequelize": "^6.37.7",
     "sequelize-typescript": "^2.1.6",
     "zod": "^4.1.12"
-  },"scripts": {
+  },
+  "scripts": {
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js --runInBand --no-cache --detectOpenHandles",
     "dev": "tsx watch src/app.ts",
     "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js --watch --runInBand --no-cache --detectOpenHandles",
