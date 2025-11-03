@@ -1,30 +1,16 @@
 import { body } from "express-validator";
-import { Op } from "sequelize";
-import { VacationRequest } from "../models/vacationRequestModel.js";
 import { User } from "../models/userModel.js";
-import { Holiday } from "../models/holidayModel.js";
 
 /**
- * 🔧 Utilidad: Generar un array con todas las fechas entre dos días
+ * 🧩 Validaciones para crear una solicitud de vacaciones
  */
-function getDateRange(start: Date, end: Date): Date[] {
-  const dates: Date[] = [];
-  const current = new Date(start);
-  while (current <= end) {
-    dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
-}
-
-/**
- * 📥 Reglas avanzadas para crear una solicitud de vacaciones
- */
-export const createVacationRules = [
-  // 🧍‍♀️ Validar ID del usuario
+export const createVacationRequestRules = [
+  // 🔸 requester_id (debe existir y ser válido)
   body("requester_id")
-    .notEmpty().withMessage("El ID del solicitante es obligatorio.")
-    .isInt({ min: 1 }).withMessage("El ID del solicitante debe ser un número positivo.")
+    .notEmpty()
+    .withMessage("El ID del solicitante es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El ID del solicitante debe ser un número positivo.")
     .bail()
     .custom(async (id) => {
       const user = await User.findByPk(id);
@@ -33,96 +19,87 @@ export const createVacationRules = [
       }
     }),
 
-  // 🗓️ Validar fechas
+  // 🔸 start_date (formato de fecha ISO)
   body("start_date")
-    .notEmpty().withMessage("La fecha de inicio es obligatoria.")
-    .isISO8601().withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
+    .notEmpty()
+    .withMessage("La fecha de inicio es obligatoria.")
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
 
+  // 🔸 end_date (formato y orden)
   body("end_date")
-    .notEmpty().withMessage("La fecha de fin es obligatoria.")
-    .isISO8601().withMessage("Formato de fecha inválido (usa YYYY-MM-DD).")
+    .notEmpty()
+    .withMessage("La fecha de fin es obligatoria.")
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD).")
     .bail()
     .custom((end_date, { req }) => {
-      const start_date = req.body.start_date;
+      const { start_date } = req.body;
       if (new Date(end_date) < new Date(start_date)) {
-        throw new Error("La fecha de fin no puede ser anterior a la de inicio.");
+        throw new Error("La fecha de fin no puede ser anterior a la fecha de inicio.");
       }
       return true;
     }),
 
-  // 📅 Validar cantidad de días solicitados
+  // 🔸 requested_days (debe ser número y positivo)
   body("requested_days")
-    .notEmpty().withMessage("Debe indicar la cantidad de días solicitados.")
-    .isInt({ min: 1 }).withMessage("Los días solicitados deben ser un número positivo.")
+    .notEmpty()
+    .withMessage("Debe indicar la cantidad de días solicitados.")
+    .isInt({ min: 1 })
+    .withMessage("Los días solicitados deben ser un número positivo.")
     .bail()
     .custom(async (requested_days, { req }) => {
-  const user = await User.findByPk(req.body.requester_id);
-  if (!user) return true;
+      const user = await User.findByPk(req.body.requester_id);
+      if (!user) return true;
 
-  const requested = Number(requested_days);
-  const available = Number(user.available_days);
+      const available_days = user.available_days ?? 0;
+      if (requested_days > available_days) {
+        throw new Error(
+          `No puedes solicitar ${requested_days} días. Solo tienes ${available_days} disponibles.`
+        );
+      }
 
-  if (!isNaN(requested) && requested > available) {
-    throw new Error(`No puede solicitar más de ${available} día(s) disponibles.`);
-  }
-  return true;
-}),
+      return true;
+    }),
 
-  // 🔁 Validar que no haya solapamiento con otras solicitudes
-  body("end_date").custom(async (end_date, { req }) => {
-    const { requester_id, start_date } = req.body;
-    if (!requester_id || !start_date) return true;
+  // 🔸 requester_comment (opcional pero limitado)
+  body("comments")
+    .optional()
+    .isString()
+    .withMessage("El comentario debe ser texto.")
+    .isLength({ max: 255 })
+    .withMessage("El comentario no puede superar los 255 caracteres."),
+];
 
-    const overlap = await VacationRequest.findOne({
-      where: {
-        requester_id,
-        [Op.or]: [
-          { start_date: { [Op.between]: [start_date, end_date] } },
-          { end_date: { [Op.between]: [start_date, end_date] } },
-        ],
-      },
-    });
+/**
+ * 📝 Validaciones para actualizar una solicitud
+ */
+export const updateVacationRequestRules = [
+  body("start_date")
+    .optional()
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
 
-    if (overlap) {
-      return Promise.reject("Ya existe una solicitud en ese rango de fechas.");
-    }
+  body("end_date")
+    .optional()
+    .isISO8601()
+    .withMessage("Formato de fecha inválido (usa YYYY-MM-DD).")
+    .custom((end_date, { req }) => {
+      if (req.body.start_date && new Date(end_date) < new Date(req.body.start_date)) {
+        throw new Error("La fecha de fin no puede ser anterior a la fecha de inicio.");
+      }
+      return true;
+    }),
 
-    return true;
-  }),
+  body("requested_days")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Los días solicitados deben ser un número positivo."),
 
-  // 🚫 Validar que el rango no incluya fines de semana ni feriados
-  body("end_date").custom(async (end_date, { req }) => {
-    const { requester_id, start_date } = req.body;
-    if (!requester_id || !start_date) return true;
-
-    const user = await User.findByPk(requester_id);
-    if (!user) return true;
-
-    const start = new Date(start_date);
-    const end = new Date(end_date);
-    const allDates = getDateRange(start, end);
-
-    // 📆 Bloquear fines de semana
-    const weekend = allDates.find(
-      (d) => d.getDay() === 0 || d.getDay() === 6 // 0 = domingo, 6 = sábado
-    );
-    if (weekend) {
-      throw new Error("El rango de fechas incluye fines de semana, los cuales no son válidos.");
-    }
-
-    // 🎉 Bloquear feriados según la ubicación del usuario
-    const holidays = await Holiday.findAll({
-      where: {
-        location_id: user.location_id, // 🔥 Solo feriados de la misma ubicación
-        holiday_date: { [Op.between]: [start, end] },
-      },
-    });
-
-    if (holidays.length > 0) {
-      const names = holidays.map((h) => h.holiday_name).join(", ");
-      throw new Error(`El rango de fechas incluye días feriados: ${names}.`);
-    }
-
-    return true;
-  }),
+  body("comments")
+    .optional()
+    .isString()
+    .withMessage("El comentario debe ser texto.")
+    .isLength({ max: 255 })
+    .withMessage("El comentario no puede superar los 255 caracteres."),
 ];
