@@ -2,6 +2,7 @@ import  type { Request, Response } from "express";
 import {User} from "../models/userModel.js";
 import bcrypt from 'bcryptjs';
 import type {UserCreationAttributes} from "../types/userInterface.js";
+import { VacationRequest } from "../models/vacationRequestModel.js";
 
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -138,36 +139,97 @@ export const deleteUser = async (req: Request, res: Response) => {
  //Obtiene el resumen de días de vacaciones de un usuario
  //Endpoint: GET /users/:id/vacations/summary
  
+// export const getVacationSummary = async (req: Request, res: Response) => {
+//   try {
+
+//     const requestedUserId = Number(req.params.id); // ID del usuario que se quiere ver
+//     const loggedInUserId = req.user!.id;           // ID del usuario que está logueado (sacado del token)
+//     const loggedInUserRole = req.user!.role;       // Rol de quien está logueado (role_id)
+
+//     // Busca al ususario solicitado
+//     const userToSummarize = await User.findByPk(requestedUserId);
+
+//     if (!userToSummarize) {
+//       return res.status(404).json({ message: "Usuario no encontrado." });
+//     }
+
+//     // Hacemos una variable en false para cuando obtengamos la respuesta y se indentique al usuario pase a true y siga
+//     let isAuthorized = false;
+
+//     // a) Regla 1:(ID logueado === ID solicitado)
+//     if (requestedUserId === loggedInUserId) {
+//       isAuthorized = true;
+//     } 
+//     // b) Regla 2: ¿Eres Admin? (Rol 1)
+//     else if (loggedInUserRole === 1) { 
+//       isAuthorized = true;
+//     } 
+//     // c) Regla 3: ¿Eres Manager (Rol 2) Y él es de tu equipo?
+//     else if (loggedInUserRole === 2) {
+//       const manager = await User.findByPk(loggedInUserId);
+
+//       // Comprueba que el departamento del Manager sea el mismo que el del empleado solicitado
+//       if (manager && manager.department_id === userToSummarize.department_id) {
+//         isAuthorized = true;
+//       }
+//     }
+
+//     if (!isAuthorized) {
+//       return res.status(403).json({ message: "Acceso denegado. No tienes permisos para ver el resumen de este usuario." });
+//     }
+    
+   
+    
+//     // los dias que tienen por defecto los usuarios
+//     const allowanceDays = 23; 
+    
+//     // Días Restantes: Viene directamente del saldo que actualizó el manager
+//     const remainingDays = userToSummarize.available_days; 
+    
+//     // Días Usados: Es una simple resta
+//     const usedDays = allowanceDays - remainingDays; 
+
+//   // resultado de la resta
+//     return res.status(200).json({
+//       allowance_days: allowanceDays,
+//       remaining_days: remainingDays,
+//       used_days: usedDays,
+//     });
+
+//   } catch (error) {
+//     console.error('Error al obtener el resumen de vacaciones:', error);
+//     return res.status(500).json({ message: 'Error interno del servidor al obtener el resumen.' });
+//   }
+// };
+
 export const getVacationSummary = async (req: Request, res: Response) => {
   try {
 
-    const requestedUserId = Number(req.params.id); // ID del usuario que se quiere ver
-    const loggedInUserId = req.user!.id;           // ID del usuario que está logueado (sacado del token)
-    const loggedInUserRole = req.user!.role;       // Rol de quien está logueado (role_id)
+    const requestedUserId = Number(req.params.id);
+    const loggedInUserId = req.user!.id;
+    const loggedInUserRole = req.user!.role;
 
-    // Busca al ususario solicitado
     const userToSummarize = await User.findByPk(requestedUserId);
 
     if (!userToSummarize) {
       return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
-    // Hacemos una variable en false para cuando obtengamos la respuesta y se indentique al usuario pase a true y siga
+    // ... (La lógica de autorización es correcta, la omitimos aquí)
+
     let isAuthorized = false;
 
-    // a) Regla 1:(ID logueado === ID solicitado)
+    // a) Regla 1: Eres tú mismo
     if (requestedUserId === loggedInUserId) {
       isAuthorized = true;
-    } 
-    // b) Regla 2: ¿Eres Admin? (Rol 1)
-    else if (loggedInUserRole === 1) { 
+    }
+    // b) Regla 2: Eres Admin (Rol 1)
+    else if (loggedInUserRole === 1) {
       isAuthorized = true;
-    } 
-    // c) Regla 3: ¿Eres Manager (Rol 2) Y él es de tu equipo?
+    }
+    // c) Regla 3: Eres Manager (Rol 2) Y él es de tu equipo
     else if (loggedInUserRole === 2) {
       const manager = await User.findByPk(loggedInUserId);
-
-      // Comprueba que el departamento del Manager sea el mismo que el del empleado solicitado
       if (manager && manager.department_id === userToSummarize.department_id) {
         isAuthorized = true;
       }
@@ -176,23 +238,32 @@ export const getVacationSummary = async (req: Request, res: Response) => {
     if (!isAuthorized) {
       return res.status(403).json({ message: "Acceso denegado. No tienes permisos para ver el resumen de este usuario." });
     }
-    
-   
-    
-    // los dias que tienen por defecto los usuarios
-    const allowanceDays = 23; 
-    
-    // Días Restantes: Viene directamente del saldo que actualizó el manager
-    const remainingDays = userToSummarize.available_days; 
-    
-    // Días Usados: Es una simple resta
-    const usedDays = allowanceDays - remainingDays; 
 
-  // resultado de la resta
+
+
+    //  Días Restantes: Valor directo y correcto de la base de datos
+    const remainingDays = userToSummarize.available_days;
+
+    // 2. Días Usados: Sumamos los días de TODAS las solicitudes APROBADAS
+    const approvedRequests = await VacationRequest.findAll({
+      where: {
+        requester_id: requestedUserId,
+        request_status: 'approved', // Solo contamos los APROBADOS
+      },
+      attributes: ['requested_days'],
+    });
+
+    const usedDays = approvedRequests.reduce((sum, req) => sum + req.requested_days, 0);
+
+    // 3. Días Asignados (Total): Es la suma de lo que queda y lo que se usó
+    // Esto se ajusta al valor inicial que puso el administrador 
+    const allowanceDays = remainingDays + usedDays;
+
+    // Resultado de la resta
     return res.status(200).json({
-      allowance_days: allowanceDays,
-      remaining_days: remainingDays,
-      used_days: usedDays,
+      allowance_days: allowanceDays, // <-- Este es el nuevo TOTAL ASIGNADO
+      remaining_days: remainingDays, // <-- Lo que le queda por usar
+      used_days: usedDays,           // <-- Lo que ya usó
     });
 
   } catch (error) {
