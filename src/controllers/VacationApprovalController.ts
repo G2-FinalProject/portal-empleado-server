@@ -50,7 +50,7 @@ export const decideVacationRequest = async (req: Request, res: Response) => {
     request.request_status = status;
     request.approver_comment = comment || null; 
 
-   if (status === "APPROVED") {
+   if (status === "approved") {
       const requester = await User.findByPk(request.requester_id, { transaction: t });
       if (!requester) {
          await t.rollback();
