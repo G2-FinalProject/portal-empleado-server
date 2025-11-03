@@ -11,13 +11,16 @@ import {
   updateVacationRequestRules,
 } from "../validators/vacationRequestValidator.js";
 import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
+import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
+
 
 const vacationRequestRouter = express.Router();
+const checkAuth = [isAuthenticated]; 
 
-vacationRequestRouter.get("/", getAllVacationRequests);
-vacationRequestRouter.get("/:id", getVacationRequestById);
-vacationRequestRouter.post("/", createVacationRequestRules, handleValidationErrors, createVacationRequest);
-vacationRequestRouter.put("/:id", updateVacationRequestRules, handleValidationErrors, updateVacationRequest);
-vacationRequestRouter.delete("/:id", deleteVacationRequest);
+vacationRequestRouter.get("/", checkAuth, getAllVacationRequests);
+vacationRequestRouter.get("/:id", checkAuth, getVacationRequestById);
+vacationRequestRouter.post("/", checkAuth, createVacationRequestRules, handleValidationErrors, createVacationRequest);
+vacationRequestRouter.patch("/:id", checkAuth, updateVacationRequestRules, handleValidationErrors, updateVacationRequest);
+vacationRequestRouter.delete("/:id", checkAuth, deleteVacationRequest);
 
 export default vacationRequestRouter;
