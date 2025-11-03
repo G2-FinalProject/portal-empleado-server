@@ -10,6 +10,8 @@ const checkAdmin = [isAuthenticated, hasRole(1)];
 const checkManagerOrAdmin = [isAuthenticated, hasRole(1, 2)];
 const checkAuth = [isAuthenticated];
 
+userRouter.get('/:id/vacations/summary',checkAuth, getVacationSummary);
+
 userRouter.get('/', checkManagerOrAdmin, getUsers);
 
 userRouter.get('/:id', checkManagerOrAdmin, getUserById);
@@ -20,6 +22,6 @@ userRouter.patch('/:id', checkAdmin, updateUserRules, handleValidationErrors, up
 
 userRouter.delete('/:id', checkAdmin, deleteUser);
 
-userRouter.get('/:id/vacations/summary',checkAuth, getVacationSummary);
+
 
 export default userRouter;  
