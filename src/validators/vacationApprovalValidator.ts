@@ -8,8 +8,8 @@ export const reviewVacationRequestRules = [
   // Validamos el 'status' que viene en el BODY
   body("status")
     .notEmpty().withMessage("Debes especificar un estado.")
-    .isIn(["APPROVED", "REJECTED"]) //  Acepta solo estos dos valores
-    .withMessage("El estado debe ser 'APPROVED' o 'REJECTED'."),
+    .isIn(["approved", "rejected"]) //  Acepta solo estos dos valores
+    .withMessage("El estado debe ser 'aproved' o 'rejected'."),
 
   // El comentario es opcional
   body("comment")

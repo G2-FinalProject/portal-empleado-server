@@ -155,3 +155,34 @@ export const deleteVacationRequest = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al eliminar la solicitud." });
   }
 };
+ 
+
+  // Obtener SOLO las solicitudes del usuario autenticado
+ 
+export const getMyVacationRequests = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id; // ← El ID viene del token JWT (middleware isAuthenticated)
+
+    const requests = await VacationRequest.findAll({
+      where: {
+        requester_id: userId // ← FILTRAR solo por este usuario
+      },
+      include: [
+        {
+          model: User,
+          as: "requester",
+          attributes: ["id", "first_name", "last_name", "email"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.status(200).json(requests);
+  } catch (error: any) {
+    console.error("❌ Error al obtener mis solicitudes:", error);
+    res.status(500).json({ 
+      message: "Error al obtener tus solicitudes.",
+      error: error.message || error 
+    });
+  }
+};
