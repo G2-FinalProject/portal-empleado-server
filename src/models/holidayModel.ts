@@ -27,9 +27,5 @@ export class Holiday
     @BelongsTo(() => Location) 
     declare location: Location;
 
-    @Column({ type: DataType.DATE })
-    declare created_at: Date;
-
-    @Column({ type: DataType.DATE })
-    declare updated_at: Date;
+    
 }
