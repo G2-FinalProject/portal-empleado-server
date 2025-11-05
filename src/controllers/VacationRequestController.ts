@@ -10,29 +10,14 @@ import type { VacationStatus } from "../types/vacationRequest.js";
 export const createVacationRequest = async (req: Request, res: Response) => {
   try {
     const requester_id = req.user!.id;
-    const { start_date, end_date, requested_days, comments } = req.body;
+    const { start_date, end_date, comments } = req.body;
 
-    // 🔹 Buscar al usuario que hace la solicitud
-    const user = await User.findByPk(requester_id);
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado." });
-    }
-
-    // 🔹 Verificar que tiene suficientes días disponibles
-    const available_days = user.available_days ?? 0;
-
-    if (requested_days > available_days) {
-      return res.status(400).json({
-        message: `No puedes solicitar ${requested_days} días. Solo tienes ${available_days} días disponibles.`,
-      });
-    }
-
-    // 🔹 Crear la solicitud si tiene saldo suficiente
+       // 🔹 Crear la solicitud si tiene saldo suficiente
     const newRequest = await VacationRequest.create({
       requester_id,
       start_date,
       end_date,
-      requested_days,
+      requested_days: req.body.requested_days,
       requester_comment: comments || null,
       request_status: "pending" satisfies VacationStatus,
     });
@@ -57,7 +42,8 @@ export const getAllVacationRequests = async (_req: Request, res: Response) => {
         {
           model: User,
           as: "requester",
-          attributes: ["id",
+          attributes: [
+            "id",
             "first_name",
             "last_name",
             "email",
@@ -114,20 +100,35 @@ export const getVacationRequestById = async (req: Request, res: Response) => {
 export const updateVacationRequest = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { start_date, end_date, requested_days, request_status, comments } = req.body;
+    const { start_date, end_date, request_status, comments } = req.body;
 
     const request = await VacationRequest.findByPk(id);
     if (!request) {
       return res.status(404).json({ message: "Solicitud no encontrada." });
     }
 
-    await request.update({
-      start_date,
-      end_date,
-      requested_days,
+     const payload: Partial<VacationRequest> & {
+      requester_comment?: string | null;
+      request_status?: VacationStatus;
+    } = {
       request_status,
-      requester_comment: comments,
-    });
+      requester_comment: comments ?? request.requester_comment,
+    };
+
+     if (start_date && end_date) {
+      payload.start_date = start_date;
+      payload.end_date = end_date;
+      payload.requested_days = req.body.requested_days; // <- recalculado por el middleware
+    }
+    else {
+      // CHANGE (defensivo): si el cliente manda requested_days sin cambiar fechas, lo ignoramos
+      if (typeof req.body.requested_days !== "undefined") {
+        // no lo incluimos en payload => no se actualiza
+      }
+    }
+    
+    await request.update(payload as any);
+
 
     res.status(200).json(request);
   } catch (error: any) {
