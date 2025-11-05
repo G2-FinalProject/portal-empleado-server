@@ -1,7 +1,7 @@
 export interface DepartmentAttributes {
   id: number;
   department_name: string;
-  manager_id?: number; // FK a users.id
+  manager_id?: number; 
  
 }
 
