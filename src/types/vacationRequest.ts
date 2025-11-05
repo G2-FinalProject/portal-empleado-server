@@ -13,7 +13,7 @@ export interface VacationRequestAttributes {
 }
 
 export type VacationRequestCreationAttributes =
-  Omit<VacationRequestAttributes, 'id' | 'created_at' | 'updated_at'> & {
+  Omit<VacationRequestAttributes, 'id'> & {
     requester_comment?: string | null; 
     approver_comment?: string | null;
   };

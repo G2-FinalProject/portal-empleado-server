@@ -6,4 +6,4 @@ export interface HolidayAttributes {
 }
 
 export type HolidayCreationAttributes =
-  Omit<HolidayAttributes, 'id' | 'created_at' | 'updated_at'>;
+  Omit<HolidayAttributes, 'id'>;

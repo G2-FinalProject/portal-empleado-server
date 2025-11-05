@@ -5,4 +5,4 @@ export interface RoleAttributes {
 }
 
 export type RoleCreationAttributes =
-  Omit<RoleAttributes, 'id' | 'created_at' | 'updated_at'>;
+  Omit<RoleAttributes, 'id'>;
