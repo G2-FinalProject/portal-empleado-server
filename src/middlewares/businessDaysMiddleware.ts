@@ -4,52 +4,52 @@ import { Op } from "sequelize";
 import { User } from "../models/userModel.js";
 import { Holiday } from "../models/holidayModel.js";
 
-// normaliza a 'YYYY-MM-DD'
+// normalize to 'YYYY-MM-DD'
 function toISODateOnly(d: Date | string) {
   if (typeof d === "string") return d.slice(0, 10);
   return new Date(d).toISOString().slice(0, 10);
 }
 
 /**
- * Aplica reglas de negocio para vacaciones:
- * - valida start_date/end_date (ISO y orden)
- * - rechaza si el rango incluye sábado/domingo o festivo de la location del usuario
- * - calcula requested_days y lo inyecta en req.body
+ * Business rules middleware for vacation requests:
+ * - validates start_date/end_date (ISO format and order)
+ * - rejects if the range includes a weekend or a holiday based on the user's location
+ * - calculates requested_days and injects it into req.body
  *
- * Uso:
- *  - POST /vacations: siempre exige start_date y end_date
- *  - PUT /vacations/:id: solo actúa si llegan ambas fechas; si llega una sola -> 400
+ * Usage:
+ *  - POST /vacations: always requires start_date and end_date
+ *  - PUT /vacations/:id: only acts if both dates are provided; if only one is sent -> 400
  */
 export async function enforceBusinessDays(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ message: "No autenticado." });
+    if (!userId) return res.status(401).json({ message: "Not authenticated." });
 
     const user = await User.findByPk(userId);
-    if (!user) return res.status(400).json({ message: "Usuario no encontrado." });
+    if (!user) return res.status(400).json({ message: "User not found." });
 
     const locationId = (user as any).location_id;
     if (!locationId) {
-      return res.status(422).json({ message: "El usuario no tiene una ubicación asignada." });
+      return res.status(422).json({ message: "User has no assigned location." });
     }
 
     const hasStart = typeof req.body.start_date === "string";
     const hasEnd = typeof req.body.end_date === "string";
 
-    // PUT: si llega una sola fecha, es error (evitamos estados inconsistentes)
+    // PUT: if only one date arrives, reject (avoid inconsistent states)
     if ((hasStart && !hasEnd) || (!hasStart && hasEnd)) {
       return res.status(400).json({
-        message: "Para cambiar fechas, start_date y end_date deben venir juntas.",
+        message: "When updating, both start_date and end_date must be provided together.",
       });
     }
 
-    // Si no llegan fechas en absoluto (PUT sin cambios de rango), ignoramos y seguimos
+    // If no dates are sent at all (PUT without date changes), skip validation
     if (!hasStart && !hasEnd) {
       if (typeof req.body.requested_days !== "undefined") delete req.body.requested_days;
       return next();
     }
 
-    // Validaciones de formato y orden
+    // Validate format and date order
     const startISO = toISODateOnly(req.body.start_date);
     const endISO = toISODateOnly(req.body.end_date);
 
@@ -57,13 +57,13 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
     const end = parseISO(endISO);
 
     if (!isValid(start) || !isValid(end)) {
-      return res.status(400).json({ message: "Fechas inválidas. Usa formato YYYY-MM-DD." });
+      return res.status(400).json({ message: "Invalid dates. Use format YYYY-MM-DD." });
     }
     if (end < start) {
-      return res.status(400).json({ message: "end_date no puede ser anterior a start_date." });
+      return res.status(400).json({ message: "end_date cannot be earlier than start_date." });
     }
 
-    // Obtener festivos del rango para la location
+    // Fetch holidays within the range for the user's location
     const holidays = await Holiday.findAll({
       where: {
         location_id: locationId,
@@ -79,7 +79,7 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
       )
     );
 
-    // Analizar rango día a día
+    // Analyze the range day by day
     const days = eachDayOfInterval({ start, end });
     let requestedDays = 0;
     const invalidDates: string[] = [];
@@ -96,20 +96,20 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
       }
     }
 
-    // Reglas del issue: rechazar si incluye finde o festivo
+    // Reject if any weekend or holiday is included
     if (invalidDates.length > 0) {
       return res.status(400).json({
         message:
-          "El rango incluye fines de semana o festivos según tu ubicación. Debe contener solo días laborables.",
+          "The range includes weekends or holidays based on your location. It must contain only business days.",
         details: { nonWorkingDates: invalidDates },
       });
     }
 
-    // Fuente de verdad: inyectar requested_days calculado
+    // Source of truth: inject calculated requested_days
     req.body.requested_days = requestedDays;
     return next();
   } catch (error) {
-    console.error("❌ Error validando días laborables:", error);
-    return res.status(500).json({ message: "Error interno al validar el rango de vacaciones." });
+    console.error("❌ Error validating business days:", error);
+    return res.status(500).json({ message: "Internal error while validating vacation range." });
   }
 }
