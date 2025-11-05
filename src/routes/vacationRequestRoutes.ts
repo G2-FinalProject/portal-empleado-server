@@ -4,7 +4,7 @@ import {
   getAllVacationRequests,
   getVacationRequestById,
   updateVacationRequest,
-  deleteVacationRequest,
+  deleteVacationRequest, getMyVacationRequests
 } from "../controllers/VacationRequestController.js";
 import {
   createVacationRequestRules,
@@ -17,6 +17,7 @@ import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
 const vacationRequestRouter = express.Router();
 const checkAuth = [isAuthenticated]; 
 
+vacationRequestRouter.get("/my-requests", checkAuth, getMyVacationRequests);
 vacationRequestRouter.get("/", checkAuth, getAllVacationRequests);
 vacationRequestRouter.get("/:id", checkAuth, getVacationRequestById);
 vacationRequestRouter.post("/", checkAuth, createVacationRequestRules, handleValidationErrors, createVacationRequest);
