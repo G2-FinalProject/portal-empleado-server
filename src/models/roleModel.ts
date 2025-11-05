@@ -11,20 +11,13 @@ import { User } from './userModel.js';
 })
 export class Role
   extends Model<RoleAttributes, RoleCreationAttributes>
-  implements RoleAttributes
-{
+  implements RoleAttributes {
   @Column({ primaryKey: true, autoIncrement: true, type: DataType.INTEGER })
   declare id: number;
 
   @AllowNull(false)
   @Column({ type: DataType.STRING(255) })
   declare role_name: string;
-
-  @Column({ type: DataType.DATE })
-  declare created_at: Date;
-
-  @Column({ type: DataType.DATE })
-  declare updated_at: Date;
 
   @HasMany(() => User)
   declare users: User[];
