@@ -13,12 +13,8 @@ import {
 import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
 import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
 import { enforceBusinessDays } from "../middlewares/businessDaysMiddleware.js";
+import { attachRequesterId } from "../middlewares/attachRequesterId.js";
 
-// para que el validator existente pueda usar requester_id del body sin romper seguridad
-const attachRequesterId = (req: any, _res: any, next: any) => {
-  if (req.user?.id) req.body.requester_id = req.user.id;
-  next();
-};
 
 const vacationRequestRouter = express.Router();
 const checkAuth = [isAuthenticated];
