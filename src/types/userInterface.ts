@@ -12,4 +12,4 @@ export interface UserAttributes {
   updated_at?: Date;
 }
 
-export type UserCreationAttributes = Omit<UserAttributes, "id" | "created_at" | "updated_at">;
+export type UserCreationAttributes = Omit<UserAttributes, 'id' >;

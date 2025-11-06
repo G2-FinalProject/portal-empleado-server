@@ -51,12 +51,6 @@ export class VacationRequest
   declare approver_comment: string | null;
 
 
-  @Column({ type: DataType.DATE })
-  declare created_at: Date;
-
-  @Column({ type: DataType.DATE })
-  declare updated_at: Date;
-
   @BelongsTo(() => User, 'requester_id')
   declare requester: User;
 }
