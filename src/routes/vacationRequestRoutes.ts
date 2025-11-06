@@ -1,23 +1,13 @@
 import express from "express";
-import {
-  createVacationRequest,
-  getAllVacationRequests,
-  getVacationRequestById,
-  updateVacationRequest,
-  deleteVacationRequest, getMyVacationRequests
-} from "../controllers/VacationRequestController.js";
-import {
-  createVacationRequestRules,
-  updateVacationRequestRules,
-} from "../validators/vacationRequestValidator.js";
+import { createVacationRequest, getAllVacationRequests, getVacationRequestById, updateVacationRequest, deleteVacationRequest, getMyVacationRequests } from "../controllers/VacationRequestController.js";
+import { createVacationRequestRules, updateVacationRequestRules, } from "../validators/vacationRequestValidator.js";
 import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
-import { isAuthenticated, hasRole } from "../middlewares/authMiddleware.js";
 import { enforceBusinessDays } from "../middlewares/businessDaysMiddleware.js";
 import { attachRequesterId } from "../middlewares/attachRequesterId.js";
+import { checkAdmin, checkManagerOrAdmin, checkAuth } from '../utils/authChecks.js';
 
 
 const vacationRequestRouter = express.Router();
-const checkAuth = [isAuthenticated];
 
 vacationRequestRouter.get("/my-requests", checkAuth, getMyVacationRequests);
 vacationRequestRouter.get("/", checkAuth, getAllVacationRequests);
