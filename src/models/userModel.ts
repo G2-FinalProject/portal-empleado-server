@@ -51,7 +51,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
     @BelongsTo(() => Location)
     declare location: Location;
 
-    @Column({ allowNull: false, type: DataType.INTEGER, defaultValue: 23 })
+    @Column({ allowNull: false, type: DataType.INTEGER })
     declare available_days: number;
 
 
