@@ -34,7 +34,8 @@ export const login = async (req: Request, res: Response) => {
 
     const sesionData = {
       first_name : user.first_name,
-      role_id : user.role_id
+      role_id : user.role_id,
+      department_id : user.department_id
     }
      
   
