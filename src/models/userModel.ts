@@ -1,5 +1,6 @@
 import {
-    Table, Column, Model, PrimaryKey, AutoIncrement, DataType, HasMany, BelongsTo, AllowNull, ForeignKey
+    Table, Column, Model, PrimaryKey, AutoIncrement, DataType, HasMany, BelongsTo, AllowNull, ForeignKey,
+    Unique
 } from 'sequelize-typescript';
 import type { UserAttributes, UserCreationAttributes } from '../types/userInterface.js';
 import { VacationRequest } from './vacationRequestModel.js';
@@ -21,8 +22,10 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
     @Column({ allowNull: false, type: DataType.STRING(255) })
     declare last_name: string;
 
-    @Column({ allowNull: false, type: DataType.STRING(255), unique: true })
-    declare email: string;
+    @Unique('users_email_uq')
+    @Column({ type: DataType.STRING(255), allowNull: false })
+    email!: string;
+
 
     @Column({ allowNull: false, type: DataType.STRING(255) })
     declare password_hash: string;
