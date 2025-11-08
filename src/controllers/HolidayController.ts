@@ -6,7 +6,8 @@ import { Location } from "../models/locationModel.js";
 export const getAllHolidays = async (_req: Request, res: Response) => {
     try {
         const holidays = await Holiday.findAll({
-            include: [{ model: Location, attributes: ["id", "location_name"] }],
+            include: [{ model: Location, as: "location", attributes: ["id", "location_name"] }]
+,
             order: [["holiday_date", "ASC"]],
         });
         res.status(200).json(holidays);
@@ -62,7 +63,8 @@ export const createHoliday = async (req: Request, res: Response) => {
         const newHoliday = await Holiday.create({ holiday_name, holiday_date, location_id });
 
         const created = await Holiday.findByPk(newHoliday.id, {
-            include: [{ model: Location, attributes: ["id", "location_name"] }],
+            include: [{ model: Location, as: "location", attributes: ["id", "location_name"] }]
+,
         });
 
         res.status(201).json(created);
@@ -136,7 +138,8 @@ export const updateHoliday = async (req: Request, res: Response) => {
         await holiday.update(updateData);
 
         const updated = await Holiday.findByPk(id, {
-            include: [{ model: Location, attributes: ["id", "location_name"] }],
+            include: [{ model: Location, as: "location", attributes: ["id", "location_name"] }]
+,
         });
 
         return res.status(200).json(updated);
