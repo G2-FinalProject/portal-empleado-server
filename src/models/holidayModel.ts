@@ -1,6 +1,5 @@
-import { Table, Column, Model, DataType, AllowNull, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, AllowNull } from 'sequelize-typescript';
 import type { HolidayAttributes, HolidayCreationAttributes } from '../types/holidayInterface.js';
-import { Location } from './locationModel.js';
 
 @Table({
     tableName: 'holidays',
@@ -21,11 +20,7 @@ export class Holiday
     @Column({ type: DataType.DATEONLY })
     declare holiday_date: Date;
 
-    @ForeignKey(() => Location) @AllowNull(false) @Column(DataType.INTEGER)
-    declare location_id: number;
-    
-    @BelongsTo(() => Location) 
-    declare location: Location;
-
-    
+    @AllowNull(false)
+  @Column({ type: DataType.INTEGER })
+  declare location_id: number;
 }
