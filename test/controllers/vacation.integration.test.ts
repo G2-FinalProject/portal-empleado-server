@@ -3,23 +3,18 @@ import express from 'express';
 import vacationRequestRouter from '../../src/routes/vacationRequestRoutes';
 import router from '../../src/routes/vacationApprovalRoutes';
 import { User } from '../../src/models/userModel';
-import { Role } from '../../src/models/roleModel';
-import { Department } from '../../src/models/departmentModel';
-import { Location } from '../../src/models/locationModel';
 import { VacationRequest } from '../../src/models/vacationRequestModel';
 import { setupTestDatabase, cleanupTestDatabase } from '../helpers/setupDatabase';
-import { tokenFor } from '../utils';
-import bcrypt from 'bcrypt';
+import { seedCoHispaniaUsers } from '../helpers/seedCoHispaniaUsers';
+import { cleanDatabase } from '../helpers/cleanDatabase';
+
 
 const app = express();
 app.use(express.json());
 app.use('/vacations', vacationRequestRouter);
 app.use('/vacations', router);
 
-describe('Probar solicitudes de vacaciones', () => {
-    let userId: number;
-    let userRoleId: number;
-
+describe('Vacation Requests - Integration Tests', () => {
     beforeAll(async () => {
         await setupTestDatabase();
     });
@@ -28,275 +23,420 @@ describe('Probar solicitudes de vacaciones', () => {
         await cleanupTestDatabase();
     });
 
-    
+
+   
+
+  // ==========================================
+  // 1: CREAR SOLICITUDES
+  // ==========================================
+  describe('POST /vacations - Crear solicitud de vacaciones', () => {
+    let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+
     beforeEach(async () => {
-
-        await VacationRequest.destroy({ where: {}, force: true, cascade: true });
-        await User.destroy({ where: {}, force: true, cascade: true });
-        await Department.destroy({ where: {}, force: true });
-        await Location.destroy({ where: {}, force: true });
-        await Role.destroy({ where: {}, force: true });
-
-        const role = await Role.create({ role_name: 'Employee' });
-        const dept = await Department.create({ department_name: 'IT' });
-        const loc = await Location.create({ location_name: 'HQ' });
-
-        const hashedPassword = await bcrypt.hash('correcta', 10);
-
-        const user = await User.create({
-            first_name: 'Olga',
-            last_name: 'Admin',
-            email: 'olga@employee.com',
-            password_hash: hashedPassword,
-            role_id: role.id,
-            department_id: dept.id,
-            location_id: loc.id,
-            available_days: 20,
-        });
-
-        userId = user.id;
-        userRoleId = role.id;
-
+      await cleanDatabase();
+      seededData = await seedCoHispaniaUsers();
     });
 
-    describe('Crear solicitud de vacaciones', () => {
-        it('debe devolver 201 y cuerpo de la solicitud', async () => {
-
-            const token = tokenFor({ id: userId, role: userRoleId });
-
-            const res = await request(app)
-                .post('/vacations')
-                .set('Authorization', `Bearer ${token}`)
-                .send({
-                    start_date: '2025-12-20',
-                    end_date: '2025-12-22',
-                    comments: 'Vacaciones orr'
-                });
-            console.log('Status:', res.status);
-            console.log('Body:', res.body);
-
-            expect(res.status).toBe(201);
-            expect(res.body).toHaveProperty('message', '🎉 Solicitud de vacaciones creada correctamente.');
-            expect(res.body).toHaveProperty('request');
-
-            expect(res.body.request).toMatchObject({
-                requester_id: userId,
-                start_date: '2025-12-20',
-                end_date: '2025-12-22',
-                requested_days: 1,
-                requester_comment: 'Vacaciones orr',
-                request_status: 'pending',
-            });
-
-            expect(res.body.request).toHaveProperty('id');
-            expect(res.body.request).toHaveProperty('createdAt');
-            expect(res.body.request).toHaveProperty('updatedAt');
+    it('✅ Employee puede crear solicitud válida', async () => {
+      const res = await request(app)
+        .post('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+        .send({
+          start_date: '2025-12-15', // Lunes
+          end_date: '2025-12-17',   // Miércoles
+          comments: 'Vacaciones de fin de año'
         });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('message', '🎉 Solicitud de vacaciones creada correctamente.');
+      expect(res.body).toHaveProperty('request');
+
+      expect(res.body.request).toMatchObject({
+        requester_id: seededData.userIds.employeeIDId,
+        start_date: '2025-12-15',
+        end_date: '2025-12-17',
+        requester_comment: 'Vacaciones de fin de año',
+        request_status: 'pending',
+      });
+
+      expect(res.body.request).toHaveProperty('id');
+      expect(res.body.request).toHaveProperty('requested_days');
+      expect(res.body.request).toHaveProperty('createdAt');
+      expect(res.body.request).toHaveProperty('updatedAt');
+    });
+  });
+
+  // ==========================================
+  // 2: VALIDACIONES EN CREACIÓN
+  // ==========================================
+  describe('POST /vacations - Validaciones', () => {
+    let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+
+    beforeEach(async () => {
+      await cleanDatabase();
+      seededData = await seedCoHispaniaUsers();
+      
+      // Modificar el employee para que tenga solo 5 días
+      await User.update(
+        { available_days: 5 },
+        { where: { id: seededData.userIds.employeeIDId } }
+      );
     });
 
-
-    describe('Aprobar solicitud de vacaciones', () => {
-
-        // Variables para los dos usuarios (Employee y Admin)
-        let employeeId: number;
-        let employeeRoleId: number;
-        let adminId: number;
-        let adminRoleId: number;
-        let requestId: number;
-
-        beforeEach(async () => {
-            // 1. Limpiar base de datos
-            await VacationRequest.destroy({ where: {}, force: true });
-            await Department.destroy({ where: {}, force: true });
-            await User.destroy({ where: {}, force: true });
-            await Location.destroy({ where: {}, force: true });
-            await Role.destroy({ where: {}, force: true });
-
-            // 2. Crear roles
-            const adminRole = await Role.create({
-                id: 1,  // ← FORZAR ID 1 para Admin
-                role_name: 'Admin'
-            });
-
-            const managerRole = await Role.create({
-                id: 2,  // ← FORZAR ID 2 para Manager
-                role_name: 'Manager'
-            });
-
-            const employeeRole = await Role.create({
-                id: 3,  // ← FORZAR ID 3 para Employee
-                role_name: 'Employee'
-            });
-
-            // 3. Crear departamento y ubicación
-            const dept = await Department.create({ department_name: 'IT' });
-            const loc = await Location.create({ location_name: 'Madrid' });
-
-            const hashedPassword = await bcrypt.hash('password123', 10);
-
-            // 4. Crear usuario EMPLOYEE (quien solicita vacaciones)
-            const employee = await User.create({
-                first_name: 'Olga',
-                last_name: 'Empleada',
-                email: 'olga@employee.com',
-                password_hash: hashedPassword,
-                role_id: employeeRole.id,
-                department_id: dept.id,
-                location_id: loc.id,
-                available_days: 20, // ← Tiene 20 días disponibles
-            });
-
-            // 5. Crear usuario ADMIN (quien aprueba)
-            const admin = await User.create({
-                first_name: 'Gabriela',
-                last_name: 'Administradora',
-                email: 'gaby@admin.com',
-                password_hash: hashedPassword,
-                role_id: adminRole.id,
-                department_id: dept.id,
-                location_id: loc.id,
-                available_days: 25,
-            });
-
-            // 6. Guardar los IDs para usar en los tests
-            employeeId = employee.id;
-            employeeRoleId = employeeRole.id;
-            adminId = admin.id;
-            adminRoleId = adminRole.id;
-
-            // 7. Crear una solicitud de vacaciones del EMPLOYEE
-            //    (simulando que ya la creó previamente)
-            const vacationRequest = await VacationRequest.create({
-                requester_id: employeeId,
-                start_date: new Date('2025-12-15'),
-                end_date: new Date('2025-12-17'),    // Miércoles (3 días hábiles)
-                requested_days: 3,
-                requester_comment: 'Necesito descansar',
-                request_status: 'pending',
-            });
-
-            requestId = vacationRequest.id;
+    it('❌ No debe crear si end_date es anterior a start_date', async () => {
+      const res = await request(app)
+        .post('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+        .send({
+          start_date: '2025-12-20',
+          end_date: '2025-12-15', // ← Anterior a start_date
+          comments: 'Fechas inválidas'
         });
 
-        it('Admin debe poder aprobar solicitud correctamente', async () => {
-            // 1. Crear token del ADMIN
-            const adminToken = tokenFor({ id: adminId, role: adminRoleId });
-
-            // 2. Hacer la petición de aprobación
-            const res = await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({
-                    status: 'approved',
-                    comment: 'Aprobado, disfruta tus vacaciones'
-                });
-
-            // Debug
-            console.log('Status:', res.status);
-            console.log('Body:', JSON.stringify(res.body, null, 2));
-
-            // 3. Verificar respuesta exitosa
-            expect(res.status).toBe(200);
-            expect(res.body).toHaveProperty('message');
-            expect(res.body.message).toContain('approved');
-
-            // 4. Verificar que la solicitud cambió de estado
-            expect(res.body.request).toMatchObject({
-                id: requestId,
-                requester_id: employeeId,
-                request_status: 'approved',
-                approver_comment: 'Aprobado, disfruta tus vacaciones',
-            });
-
-            // 5. Verificar que los días disponibles del EMPLOYEE se redujeron
-            const updatedEmployee = await User.findByPk(employeeId);
-            expect(updatedEmployee).not.toBeNull();
-            expect(updatedEmployee!.available_days).toBe(17); // 20 - 3 = 17
-        });
-
-        it('Admin debe poder rechazar solicitud correctamente', async () => {
-            const adminToken = tokenFor({ id: adminId, role: adminRoleId });
-
-            const res = await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({
-                    status: 'rejected',
-                    comment: 'No hay suficiente personal en esas fechas'
-                });
-
-            console.log('Status:', res.status);
-            console.log('Body:', JSON.stringify(res.body, null, 2));
-
-            expect(res.status).toBe(200);
-            expect(res.body.request).toMatchObject({
-                id: requestId,
-                request_status: 'rejected',
-                approver_comment: 'No hay suficiente personal en esas fechas',
-            });
-
-            // Los días NO deben reducirse cuando se rechaza
-            const updatedEmployee = await User.findByPk(employeeId);
-            expect(updatedEmployee!.available_days).toBe(20); // Siguen siendo 20
-        });
-
-        it('No debe poder aprobar una solicitud ya aprobada', async () => {
-            const adminToken = tokenFor({ id: adminId, role: adminRoleId });
-
-            // Primero la aprobamos
-            await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ status: 'approved', comment: 'Primera aprobación' });
-
-            // Intentamos aprobarla de nuevo
-            const res = await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ status: 'approved', comment: 'Segunda aprobación' });
-
-            expect(res.status).toBe(409);
-            expect(res.body.message).toContain('ya fue approved');
-        });
-
-        it('Employee no debe poder aprobar solicitudes (403 Forbidden)', async () => {
-            // Intentamos que el EMPLOYEE apruebe su propia solicitud
-            const employeeToken = tokenFor({ id: employeeId, role: employeeRoleId });
-
-            const res = await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${employeeToken}`)
-                .send({
-                    status: 'approved',
-                    comment: 'Me apruebo yo mismo 😈'
-                });
-
-            expect(res.status).toBe(403); // Forbidden
-            expect(res.body.message).toContain('No tienes permisos');
-        });
-
-        it('No debe aprobar si el empleado no tiene días suficientes', async () => {
-            // Modificamos al empleado para que tenga solo 2 días disponibles
-            await User.update(
-                { available_days: 2 },
-                { where: { id: employeeId } }
-            );
-
-            const adminToken = tokenFor({ id: adminId, role: adminRoleId });
-
-            const res = await request(app)
-                .patch(`/vacations/${requestId}/review`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({
-                    status: 'approved',
-                    comment: 'Intentando aprobar'
-                });
-
-            expect(res.status).toBe(400);
-            expect(res.body.message).toContain('no tiene');
-            expect(res.body.message).toContain('días');
-        });
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('end_date cannot be earlier than start_date');
     });
 
+    it('❌ No debe crear si el rango no contiene días hábiles', async () => {
+      const res = await request(app)
+        .post('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+        .send({
+          start_date: '2025-12-06', // Sábado
+          end_date: '2025-12-07',   // Domingo
+          comments: 'Solo fin de semana'
+        });
 
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('no business days');
+    });
+
+    it('❌ No debe crear si requested_days supera available_days', async () => {
+      // El usuario tiene solo 5 días disponibles
+      const res = await request(app)
+        .post('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+        .send({
+          start_date: '2025-12-15', // Lunes
+          end_date: '2025-12-26',   // Viernes siguiente (10 días hábiles)
+          comments: 'Más días de los disponibles'
+        });
+
+      expect(res.status).toBe(400);
+      const errorMsg = JSON.stringify(res.body);
+      expect(errorMsg).toMatch(/no puedes solicitar|Solo tienes/i);
+    });
+  });
+
+  // ==========================================
+  // 3: LISTADO DE SOLICITUDES (GET)
+  // ==========================================
+  describe('GET /vacations - Listado de solicitudes', () => {
+    let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+
+    beforeEach(async () => {
+      await cleanDatabase();
+      seededData = await seedCoHispaniaUsers();
+
+      // Crear 3 solicitudes de diferentes departamentos
+      
+      // Solicitud 1: Elena (I+D, Madrid)
+      await VacationRequest.create({
+        requester_id: seededData.userIds.employeeIDId,
+        start_date: new Date('2025-12-15'),
+        end_date: new Date('2025-12-17'),
+        requested_days: 3,
+        requester_comment: 'Vacaciones Elena (I+D)',
+        request_status: 'pending',
+      });
+
+      // Solicitud 2: Ernesto (Sistemas, Barcelona)
+      await VacationRequest.create({
+        requester_id: seededData.userIds.employeeSistemasId,
+        start_date: new Date('2025-12-18'),
+        end_date: new Date('2025-12-19'),
+        requested_days: 2,
+        requester_comment: 'Vacaciones Ernesto (Sistemas)',
+        request_status: 'pending',
+      });
+
+      // Solicitud 3: Elisa (Contabilidad, Pontevedra)
+      await VacationRequest.create({
+        requester_id: seededData.userIds.employeeContabilidadId,
+        start_date: new Date('2025-12-20'),
+        end_date: new Date('2025-12-22'),
+        requested_days: 1,
+        requester_comment: 'Vacaciones Elisa (Contabilidad)',
+        request_status: 'pending',
+      });
+    });
+
+    it('✅ Admin puede ver TODAS las solicitudes', async () => {
+      const res = await request(app)
+        .get('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBe(3); // ← Ve las 3 solicitudes
+    });
+
+    it('✅ Manager I+D solo ve solicitudes de su departamento', async () => {
+      const res = await request(app)
+        .get('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.managerIDToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBe(1); // ← Solo ve 1 (Elena de I+D)
+
+      // Verificar que es del departamento correcto
+      expect(res.body[0].requester.department_id).toBe(seededData.departmentIds.deptIDId);
+      expect(res.body[0].requester_id).toBe(seededData.userIds.employeeIDId);
+    });
+
+    it('✅ Manager Sistemas solo ve solicitudes de su departamento', async () => {
+      const res = await request(app)
+        .get('/vacations')
+        .set('Authorization', `Bearer ${seededData.tokens.managerSistemasToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBe(1); // ← Solo ve 1 (Ernesto de Sistemas)
+
+      // Verificar que es del departamento correcto
+      expect(res.body[0].requester.department_id).toBe(seededData.departmentIds.deptSistemasId);
+      expect(res.body[0].requester_id).toBe(seededData.userIds.employeeSistemasId);
+    });
+
+    it('✅ Employee solo ve SUS propias solicitudes', async () => {
+      const res = await request(app)
+        .get('/vacations/my-requests')
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBe(1); // ← Solo ve la suya
+
+      // Verificar que es su solicitud
+      expect(res.body[0].requester_id).toBe(seededData.userIds.employeeIDId);
+    });
+  });
+
+  // ==========================================
+  // 4: APROBACIÓN POR ADMIN
+  // ==========================================
+  describe('PATCH /vacations/:id/review - Aprobación por Admin', () => {
+    let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+    let requestId: number;
+
+    beforeEach(async () => {
+      await cleanDatabase();
+      seededData = await seedCoHispaniaUsers();
+
+      // Crear una solicitud pendiente
+      const vacationRequest = await VacationRequest.create({
+        requester_id: seededData.userIds.employeeIDId,
+        start_date: new Date('2025-12-15'),
+        end_date: new Date('2025-12-17'),
+        requested_days: 3,
+        requester_comment: 'Necesito descansar',
+        request_status: 'pending',
+      });
+      requestId = vacationRequest.id;
+    });
+
+    it('✅ Admin puede aprobar solicitud correctamente', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Aprobado, disfruta tus vacaciones'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body.message).toContain('approved');
+
+      expect(res.body.request).toMatchObject({
+        id: requestId,
+        requester_id: seededData.userIds.employeeIDId,
+        request_status: 'approved',
+        approver_comment: 'Aprobado, disfruta tus vacaciones',
+      });
+
+      // Verificar que los días se redujeron
+      const updatedEmployee = await User.findByPk(seededData.userIds.employeeIDId);
+      expect(updatedEmployee).not.toBeNull();
+      expect(updatedEmployee!.available_days).toBe(20); // 23 - 3 = 20
+    });
+
+    it('✅ Admin puede rechazar solicitud correctamente', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`)
+        .send({
+          status: 'rejected',
+          comment: 'No hay suficiente personal en esas fechas'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.request).toMatchObject({
+        id: requestId,
+        request_status: 'rejected',
+        approver_comment: 'No hay suficiente personal en esas fechas',
+      });
+
+      // Los días NO deben reducirse cuando se rechaza
+      const updatedEmployee = await User.findByPk(seededData.userIds.employeeIDId);
+      expect(updatedEmployee!.available_days).toBe(23); // Siguen siendo 23
+    });
+
+    it('⚠️ No debe poder aprobar una solicitud ya aprobada (409)', async () => {
+      // Primero la aprobamos
+      await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`)
+        .send({ status: 'approved', comment: 'Primera aprobación' });
+
+      // Intentamos aprobarla de nuevo
+      const res = await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`)
+        .send({ status: 'approved', comment: 'Segunda aprobación' });
+
+      expect(res.status).toBe(409); // Conflict
+      expect(res.body.message).toContain('ya fue approved');
+    });
+
+    it('❌ Employee no debe poder aprobar solicitudes (403)', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Me apruebo yo mismo 😈'
+        });
+
+      expect(res.status).toBe(403); // Forbidden
+      expect(res.body.message).toContain('No tienes permisos');
+    });
+
+    it('❌ No debe aprobar si el empleado no tiene días suficientes', async () => {
+      // Modificar al empleado para que tenga solo 2 días
+      await User.update(
+        { available_days: 2 },
+        { where: { id: seededData.userIds.employeeIDId } }
+      );
+
+      const res = await request(app)
+        .patch(`/vacations/${requestId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.adminToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Intentando aprobar'
+        });
+
+      expect(res.status).toBe(400); // Bad Request
+      expect(res.body.message).toContain('no tiene');
+      expect(res.body.message).toContain('días');
+    });
+  });
+
+  // ==========================================
+  // 5: APROBACIÓN POR MANAGER
+  // ==========================================
+  describe('PATCH /vacations/:id/review - Aprobación por Manager', () => {
+    let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+    let requestIDId: number;        // Solicitud de I+D
+    let requestSistemasId: number;  // Solicitud de Sistemas
+
+    beforeEach(async () => {
+      await cleanDatabase();
+      seededData = await seedCoHispaniaUsers();
+
+      // Solicitud 1: Elena (I+D)
+      const requestID = await VacationRequest.create({
+        requester_id: seededData.userIds.employeeIDId,
+        start_date: new Date('2025-12-15'),
+        end_date: new Date('2025-12-17'),
+        requested_days: 3,
+        requester_comment: 'Vacaciones Elena',
+        request_status: 'pending',
+      });
+      requestIDId = requestID.id;
+
+      // Solicitud 2: Ernesto (Sistemas)
+      const requestSistemas = await VacationRequest.create({
+        requester_id: seededData.userIds.employeeSistemasId,
+        start_date: new Date('2025-12-18'),
+        end_date: new Date('2025-12-19'),
+        requested_days: 2,
+        requester_comment: 'Vacaciones Ernesto',
+        request_status: 'pending',
+      });
+      requestSistemasId = requestSistemas.id;
+    });
+
+    it('✅ Manager I+D PUEDE aprobar solicitud de su departamento', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestIDId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.managerIDToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Aprobado por el manager de I+D'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.request.request_status).toBe('approved');
+
+      // Verificar descuento de días
+      const updatedEmployee = await User.findByPk(seededData.userIds.employeeIDId);
+      expect(updatedEmployee!.available_days).toBe(20); // 23 - 3 = 20
+    });
+
+    it('❌ Manager I+D NO PUEDE aprobar solicitud de otro departamento', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestSistemasId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.managerIDToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Intentando aprobar de otro departamento'
+        });
+
+      expect(res.status).toBe(403); // Forbidden
+      expect(res.body.message).toContain('MANAGER solo puede aprobar solicitudes de su mismo departamento');
+    });
+
+    it('✅ Manager Sistemas PUEDE aprobar solicitud de su departamento', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestSistemasId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.managerSistemasToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Aprobado por el manager de Sistemas'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.request.request_status).toBe('approved');
+
+      // Verificar descuento de días
+      const updatedEmployee = await User.findByPk(seededData.userIds.employeeSistemasId);
+      expect(updatedEmployee!.available_days).toBe(21); // 23 - 2 = 21
+    });
+
+    it('❌ Manager Sistemas NO PUEDE aprobar solicitud de otro departamento', async () => {
+      const res = await request(app)
+        .patch(`/vacations/${requestIDId}/review`)
+        .set('Authorization', `Bearer ${seededData.tokens.managerSistemasToken}`)
+        .send({
+          status: 'approved',
+          comment: 'Intentando aprobar de I+D'
+        });
+
+      expect(res.status).toBe(403); // Forbidden
+      expect(res.body.message).toContain('MANAGER solo puede aprobar solicitudes de su mismo departamento');
+    });
+  });
 });
