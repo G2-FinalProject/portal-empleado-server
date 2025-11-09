@@ -1,0 +1,46 @@
+name: 🚀 Build y Publicar Imagen Docker
+
+on:
+  push:
+    branches:
+      - main       # Cuando subas a 'main'
+      - develop    # Cuando subas a 'develop'
+      - feature/dockerizacion # mi rama
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+
+    permissions:
+      contents: read
+      packages: write 
+    steps:
+      
+      - name: ⬇️ Descargar el código
+        uses: actions/checkout@v4
+
+     
+      - name: 🔡 Poner el nombre en minúsculas
+        id: string
+        run: echo "repository_lowercase=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+    
+      - name: 🔐 Iniciar sesión en el Almacén (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          
+          password: ${{ secrets.GITHUB_TOKEN }} 
+
+     
+      - name: 📦 Construir y Guardar la imagen
+        uses: docker/build-push-action@v5
+        with:
+          context: .       # Usa el Dockerfile de la raíz
+          push: true       # Sí, guárdala en el almacén
+          
+          #  La "Etiqueta" de la imagen
+          # (ej: ghcr.io/g2-finalproject/portal-empleado-server:develop)
+          tags: ghcr.io/${{ steps.string.outputs.repository_lowercase }}:${{ github.ref_name }}
