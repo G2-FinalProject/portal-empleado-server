@@ -19,12 +19,12 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     //  desactiva estas dos para evitar choque con reflect-metadata y decoradores
-    
+
     // "noUncheckedSideEffectImports": false,
     "types": [
       "node"
     ]
   },
   "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "test/**/*", "dist"]
+  "exclude": ["node_modules", "scripts/print-config.ts/**/*", "dist"]
 }

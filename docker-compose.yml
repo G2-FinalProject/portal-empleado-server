@@ -1,0 +1,9 @@
+services:
+  portal-server:
+    build: .
+    container_name: portal-server
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped

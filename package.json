@@ -21,6 +21,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@sequelize/core": "^7.0.0-alpha.47",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
