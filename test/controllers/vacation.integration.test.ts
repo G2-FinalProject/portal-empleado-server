@@ -16,6 +16,8 @@ app.use(express.json());
 app.use('/vacations', vacationRequestRouter);
 
 describe('Probar solicitudes de vacaciones', () => {
+    let userId: number;
+    let userRoleId: number;
 
     beforeAll(async () => {
         await setupTestDatabase();
@@ -33,14 +35,13 @@ describe('Probar solicitudes de vacaciones', () => {
         await Location.destroy({ where: {}, force: true });
         await Role.destroy({ where: {}, force: true });
 
-
         const role = await Role.create({ role_name: 'Employee' });
         const dept = await Department.create({ department_name: 'IT' });
         const loc = await Location.create({ location_name: 'HQ' });
 
         const hashedPassword = await bcrypt.hash('correcta', 10);
 
-        await User.create({
+        const user = await User.create({
             first_name: 'Olga',
             last_name: 'Admin',
             email: 'olga@employee.com',
@@ -51,28 +52,36 @@ describe('Probar solicitudes de vacaciones', () => {
             available_days: 20,
         });
 
+        userId = user.id;
+        userRoleId = role.id;
+
     });
 
     describe('Crear solicitud de vacaciones', () => {
         it('debe devolver 201 y cuerpo de la solicitud', async () => {
 
-            const token = tokenFor({ id: 1, role: 3 });
+            const token = tokenFor({id: userId, role: userRoleId });
 
             const res = await request(app)
                 .post('/vacations')
                 .set('Authorization', `Bearer ${token}`)
-                .send({ start_date: '2025-12-20', end_date: '2025-12-22', requested_days: 3, comments: 'Vacaciones orr' })
-                ;
+                .send({
+                    start_date: '2025-12-20',
+                    end_date: '2025-12-22',
+                    comments: 'Vacaciones orr'
+                });
+            console.log('Status:', res.status);
+            console.log('Body:', res.body);
 
             expect(res.status).toBe(201);
             expect(res.body).toHaveProperty('message', '🎉 Solicitud de vacaciones creada correctamente.');
             expect(res.body).toHaveProperty('request');
 
             expect(res.body.request).toMatchObject({
-                requester_id: 1,
+                requester_id: userId,
                 start_date: '2025-12-20',
                 end_date: '2025-12-22',
-                requested_days: 3,
+                requested_days: 1,
                 requester_comment: 'Vacaciones orr',
                 request_status: 'pending',
             });
