@@ -28,6 +28,7 @@ describe('Probar solicitudes de vacaciones', () => {
         await cleanupTestDatabase();
     });
 
+    
     beforeEach(async () => {
 
         await VacationRequest.destroy({ where: {}, force: true, cascade: true });
