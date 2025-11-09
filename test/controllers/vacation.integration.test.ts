@@ -167,8 +167,8 @@ describe('Probar solicitudes de vacaciones', () => {
             //    (simulando que ya la creó previamente)
             const vacationRequest = await VacationRequest.create({
                 requester_id: employeeId,
-                start_date: '2025-12-15', // Lunes
-                end_date: '2025-12-17',   // Miércoles (3 días hábiles)
+                start_date: new Date('2025-12-15'),
+                end_date: new Date('2025-12-17'),    // Miércoles (3 días hábiles)
                 requested_days: 3,
                 requester_comment: 'Necesito descansar',
                 request_status: 'pending',
