@@ -26,5 +26,5 @@
     ]
   },
   "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "scripts/print-config.ts/**/*", "dist"]
+  "exclude": ["node_modules", "src/scripts/print-config.ts/**/*", "dist"]
 }

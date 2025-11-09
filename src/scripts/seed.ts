@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import { sequelize } from '../src/database/db_connection.js';
-import { Role } from '../src/models/roleModel.js';
-import { Location } from '../src/models/locationModel.js';
-import { Department } from '../src/models/departmentModel.js';
-import { User } from '../src/models/userModel.js';
+import { sequelize } from '../database/db_connection.js';
+import { Role } from '../models/roleModel.js';
+import { Location } from '../models/locationModel.js';
+import { Department } from '../models/departmentModel.js';
+import { User } from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 
 async function main() {
