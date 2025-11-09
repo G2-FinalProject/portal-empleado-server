@@ -1,13 +1,12 @@
 import {
   Table, Column, Model, DataType, AllowNull,
-  ForeignKey, BelongsTo
+
 } from 'sequelize-typescript';
 import type {
   VacationRequestAttributes,
   VacationRequestCreationAttributes,
   VacationStatus
 } from '../types/vacationRequest.js';
-import { User } from './userModel.js';
 
 @Table({
   tableName: 'vacation_requests',
@@ -16,12 +15,10 @@ import { User } from './userModel.js';
 })
 export class VacationRequest
   extends Model<VacationRequestAttributes, VacationRequestCreationAttributes>
-  implements VacationRequestAttributes
-{
+  implements VacationRequestAttributes {
   @Column({ primaryKey: true, autoIncrement: true, type: DataType.INTEGER })
   declare id: number;
 
-  @ForeignKey(() => User)
   @AllowNull(false)
   @Column({ type: DataType.INTEGER })
   declare requester_id: number;
@@ -46,11 +43,8 @@ export class VacationRequest
   @Column({ type: DataType.STRING(255) })
   declare requester_comment: string | null;
 
-   @AllowNull(true)
+  @AllowNull(true)
   @Column({ type: DataType.STRING(255) })
   declare approver_comment: string | null;
 
-
-  @BelongsTo(() => User, 'requester_id')
-  declare requester: User;
 }

@@ -38,7 +38,7 @@ export const getUserById = async (req: Request, res: Response) => {
 
 // CREAR USUSARIO
 export const createUser = async (req: Request, res: Response) => {
-  const { first_name, last_name, email, password, role_id, department_id, location_id} = req.body;
+  const { first_name, last_name, email, password, role_id, department_id, location_id, available_days} = req.body;
 
   try {
     // Verificar si el email ya está registrado
@@ -58,7 +58,9 @@ export const createUser = async (req: Request, res: Response) => {
       password_hash: hashedPassword,
       role_id,
       department_id,
-      location_id  // <-- Este es el nuevo campo obligatorio
+      location_id,
+      available_days 
+
     } as UserCreationAttributes); // <-- Asegúrate de que tu interface también esté actualizada
     // Volvemos a consultar el usuario sin enviar el hash
     const userResponse = await User.findByPk(newUser.id, {

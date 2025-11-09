@@ -32,6 +32,7 @@ export const getAllRoles = async (_req: Request, res: Response) => {
       include: [
         {
           model: User,
+          as: "users",
           attributes: ["id", "first_name", "last_name", "email"],
         },
       ],
@@ -50,7 +51,11 @@ export const getRoleById = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const role = await Role.findByPk(id, {
-      include: [{ model: User, attributes: ["id", "first_name", "last_name"] }],
+      include: [{
+        model: User,
+        as: "users",
+        attributes: ["id", "first_name", "last_name"]
+      }],
     });
 
     if (!role) {
