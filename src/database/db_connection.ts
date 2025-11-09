@@ -19,5 +19,7 @@ export const sequelize = new Sequelize({
   dialect: db.dialect, // 'mysql'
   define: { timestamps: true, underscored: true },
   models: [User, VacationRequest, Department, Holiday, Role, Location], 
+
   logging: process.env.NODE_ENV === 'test' ? false : console.log,
+  logQueryParameters: true, //añade parámetros visibles
 });

@@ -13,15 +13,17 @@ function toISODateOnly(d: Date | string) {
 /**
  * Business rules middleware for vacation requests:
  * - validates start_date/end_date (ISO format and order)
- * - rejects if the range includes a weekend or a holiday based on the user's location
- * - calculates requested_days and injects it into req.body
+ * - counts ONLY business days (excludes weekends & holidays by user's location)
+ * - injects requested_days into req.body
  *
- * Usage:
- *  - POST /vacations: always requires start_date and end_date
- *  - PUT /vacations/:id: only acts if both dates are provided; if only one is sent -> 400
+ * POST /vacations: requires dates
+ * PATCH /vacations/:id: if both dates provided → recalc; if only one → 400; if none → skip
  */
 export async function enforceBusinessDays(req: Request, res: Response, next: NextFunction) {
   try {
+    // nunca aceptar requested_days del cliente
+    if ("requested_days" in req.body) delete (req.body as any).requested_days;
+
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Not authenticated." });
 
@@ -36,20 +38,20 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
     const hasStart = typeof req.body.start_date === "string";
     const hasEnd = typeof req.body.end_date === "string";
 
-    // PUT: if only one date arrives, reject (avoid inconsistent states)
+    // PATCH: si llega solo una de las fechas → 400
     if ((hasStart && !hasEnd) || (!hasStart && hasEnd)) {
       return res.status(400).json({
         message: "When updating, both start_date and end_date must be provided together.",
       });
     }
 
-    // If no dates are sent at all (PUT without date changes), skip validation
+    // PATCH: si no llegan fechas → no recalcular, seguir
     if (!hasStart && !hasEnd) {
       if (typeof req.body.requested_days !== "undefined") delete req.body.requested_days;
       return next();
     }
 
-    // Validate format and date order
+    // Validar formato y orden
     const startISO = toISODateOnly(req.body.start_date);
     const endISO = toISODateOnly(req.body.end_date);
 
@@ -63,7 +65,7 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
       return res.status(400).json({ message: "end_date cannot be earlier than start_date." });
     }
 
-    // Fetch holidays within the range for the user's location
+    // Feriados del rango para la ubicación del usuario
     const holidays = await Holiday.findAll({
       where: {
         location_id: locationId,
@@ -79,34 +81,26 @@ export async function enforceBusinessDays(req: Request, res: Response, next: Nex
       )
     );
 
-    // Analyze the range day by day
+    // Contar solo business days (excluye finde y festivos)
     const days = eachDayOfInterval({ start, end });
     let requestedDays = 0;
-    const invalidDates: string[] = [];
-
     for (const d of days) {
       const iso = toISODateOnly(d);
-      const weekend = isWeekend(d);
-      const holiday = holidaySet.has(iso);
-
-      if (weekend || holiday) {
-        invalidDates.push(iso);
-      } else {
+      if (!isWeekend(d) && !holidaySet.has(iso)) {
         requestedDays++;
       }
     }
 
-    // Reject if any weekend or holiday is included
-    if (invalidDates.length > 0) {
+    // Si no hay días hábiles en el rango → 400
+    if (requestedDays === 0) {
       return res.status(400).json({
-        message:
-          "The range includes weekends or holidays based on your location. It must contain only business days.",
-        details: { nonWorkingDates: invalidDates },
+        message: "Selected range contains no business days.",
       });
     }
 
-    // Source of truth: inject calculated requested_days
-    req.body.requested_days = requestedDays;
+    // Inyectar el conteo de business days
+    (req.body as any).requested_days = requestedDays;
+
     return next();
   } catch (error) {
     console.error("❌ Error validating business days:", error);

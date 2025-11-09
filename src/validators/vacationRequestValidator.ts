@@ -1,32 +1,15 @@
 import { body } from "express-validator";
 import { User } from "../models/userModel.js";
 
-/**
- * 🧩 Validaciones para crear una solicitud de vacaciones
- */
-export const createVacationRequestRules = [
-  // 🔸 requester_id (debe existir y ser válido)
-  body("requester_id")
-    .notEmpty()
-    .withMessage("El ID del solicitante es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El ID del solicitante debe ser un número positivo.")
-    .bail()
-    .custom(async (id) => {
-      const user = await User.findByPk(id);
-      if (!user) {
-        return Promise.reject("El usuario solicitante no existe.");
-      }
-    }),
 
-  // 🔸 start_date (formato de fecha ISO)
+export const createVacationRequestRules = [
+
   body("start_date")
     .notEmpty()
     .withMessage("La fecha de inicio es obligatoria.")
     .isISO8601()
     .withMessage("Formato de fecha inválido (usa YYYY-MM-DD)."),
 
-  // 🔸 end_date (formato y orden)
   body("end_date")
     .notEmpty()
     .withMessage("La fecha de fin es obligatoria.")
@@ -90,11 +73,6 @@ export const updateVacationRequestRules = [
       }
       return true;
     }),
-
-  body("requested_days")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("Los días solicitados deben ser un número positivo."),
 
   body("comments")
     .optional()
