@@ -112,8 +112,20 @@ describe('Probar solicitudes de vacaciones', () => {
             await Role.destroy({ where: {}, force: true });
 
             // 2. Crear roles
-            const employeeRole = await Role.create({ role_name: 'Employee' });
-            const adminRole = await Role.create({ role_name: 'Admin' });
+            const adminRole = await Role.create({
+                id: 1,  // ← FORZAR ID 1 para Admin
+                role_name: 'Admin'
+            });
+
+            const managerRole = await Role.create({
+                id: 2,  // ← FORZAR ID 2 para Manager
+                role_name: 'Manager'
+            });
+
+            const employeeRole = await Role.create({
+                id: 3,  // ← FORZAR ID 3 para Employee
+                role_name: 'Employee'
+            });
 
             // 3. Crear departamento y ubicación
             const dept = await Department.create({ department_name: 'IT' });
@@ -124,7 +136,7 @@ describe('Probar solicitudes de vacaciones', () => {
             // 4. Crear usuario EMPLOYEE (quien solicita vacaciones)
             const employee = await User.create({
                 first_name: 'Olga',
-                last_name: 'Employee',
+                last_name: 'Empleada',
                 email: 'olga@employee.com',
                 password_hash: hashedPassword,
                 role_id: employeeRole.id,
@@ -136,11 +148,11 @@ describe('Probar solicitudes de vacaciones', () => {
             // 5. Crear usuario ADMIN (quien aprueba)
             const admin = await User.create({
                 first_name: 'Gabriela',
-                last_name: 'Admin',
+                last_name: 'Administradora',
                 email: 'gaby@admin.com',
                 password_hash: hashedPassword,
                 role_id: adminRole.id,
-                department_id: dept.id, // Mismo departamento (aunque al admin no le importa)
+                department_id: dept.id,
                 location_id: loc.id,
                 available_days: 25,
             });
