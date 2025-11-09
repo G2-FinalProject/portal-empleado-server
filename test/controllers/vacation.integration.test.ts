@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import vacationRequestRouter from '../../src/routes/vacationRequestRoutes';
-import router from '../../src/routes/vacationApprovalRoutes';
+import vacationApprovalRouter from '../../src/routes/vacationApprovalRoutes';
 import { User } from '../../src/models/userModel';
 import { VacationRequest } from '../../src/models/vacationRequestModel';
 import { setupTestDatabase, cleanupTestDatabase } from '../helpers/setupDatabase';
@@ -12,7 +12,7 @@ import { cleanDatabase } from '../helpers/cleanDatabase';
 const app = express();
 app.use(express.json());
 app.use('/vacations', vacationRequestRouter);
-app.use('/vacations', router);
+app.use('/vacations', vacationApprovalRouter);
 
 describe('Vacation Requests - Integration Tests', () => {
     beforeAll(async () => {
