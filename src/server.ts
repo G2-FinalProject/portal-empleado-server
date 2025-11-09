@@ -5,15 +5,16 @@ import { associateModels } from './database/associations.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-associateModels(sequelize);  // ← AÑADE ESTO (antes del sync)
+associateModels(sequelize);
 
 
 (async () => {
   try {
+   
     await sequelize.authenticate();
     console.log('✅ Conexión exitosa a la base de datos');
 
-    await sequelize.sync({});
+    await sequelize.sync();
     console.log('📦 Tablas sincronizadas');
 
     const server = app.listen(PORT, () => {
@@ -22,7 +23,7 @@ associateModels(sequelize);  // ← AÑADE ESTO (antes del sync)
 
     process.on('SIGINT', async () => {
       console.log('\n🔌 Cerrando conexión…');
-      await sequelize.close().catch(() => {});
+      await sequelize.close().catch(() => { });
       server.close(() => process.exit(0));
     });
   } catch (err) {

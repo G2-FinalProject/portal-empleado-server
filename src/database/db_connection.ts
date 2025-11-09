@@ -28,11 +28,11 @@ export const sequelize = new Sequelize({
 });
 
 
-export async function initDb(force = false) {
+export async function initDb() {
   await sequelize.authenticate();
   // asociaciones DESPUÉS de addModels y ANTES de sync:
   associateModels(sequelize);
-  await sequelize.sync({ });
+  await sequelize.sync();
 }
 export async function resetDb() {
   const { models } = sequelize;
