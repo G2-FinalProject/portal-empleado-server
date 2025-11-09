@@ -23,13 +23,13 @@ export const createDepartment = async (req: Request, res: Response) => {
 };
 
 // GET /departments
- 
+
 export const getAllDepartments = async (req: Request, res: Response) => {
   try {
     const departments = await Department.findAll({
       include: [
-        { 
-          model: User, 
+        {
+          model: User,
           as: 'manager', // Trae la info del Mánager (User)
           attributes: ['id', 'first_name', 'last_name', 'email'] // Solo datos seguros
         },
@@ -51,7 +51,11 @@ export const getDepartmentById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const department = await Department.findByPk(id, {
-      include: ['manager', 'users'] // Incluimos mánager y empleados
+      include: [
+        { model: User, as: 'manager', attributes: ['id', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'users', attributes: ['id', 'first_name', 'last_name'] }]
+
+
     });
 
     if (!department) {
@@ -108,7 +112,7 @@ export const deleteDepartment = async (req: Request, res: Response) => {
     //  Lógica de negocio: No dejar borrar un depto si tiene empleados
     const userCount = await User.count({ where: { department_id: id } });
     if (userCount > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: `No se puede borrar el departamento porque tiene ${userCount} empleado(s) asignado(s).`
       });
     }

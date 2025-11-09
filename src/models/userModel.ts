@@ -1,12 +1,8 @@
 import {
-    Table, Column, Model, PrimaryKey, AutoIncrement, DataType, HasMany, BelongsTo, AllowNull, ForeignKey,
+    Table, Column, Model, PrimaryKey, AutoIncrement, DataType, AllowNull,
     Unique
 } from 'sequelize-typescript';
 import type { UserAttributes, UserCreationAttributes } from '../types/userInterface.js';
-import { VacationRequest } from './vacationRequestModel.js';
-import { Department } from './departmentModel.js';
-import { Role } from './roleModel.js';
-import { Location } from './locationModel.js';
 
 @Table({ tableName: 'users', timestamps: true, underscored: true })
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -24,37 +20,26 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
 
     @Unique('users_email_uq')
     @Column({ type: DataType.STRING(255), allowNull: false })
-    email!: string;
+    declare email: string;
 
 
     @Column({ allowNull: false, type: DataType.STRING(255) })
     declare password_hash: string;
 
-    @ForeignKey(() => Role)
     @AllowNull(false)
     @Column({ type: DataType.INTEGER })
     declare role_id: number;
 
-    @BelongsTo(() => Role)
-    declare role: Role;
-
-    @ForeignKey(() => Department)
     @AllowNull(false)
     @Column({ type: DataType.INTEGER })
     declare department_id: number;
 
-    @BelongsTo(() => Department)
-    declare department: Department;
-
-    @ForeignKey(() => Location) @AllowNull(false) @Column(DataType.INTEGER)
+    @AllowNull(false) @Column(DataType.INTEGER)
     declare location_id: number;
-    @BelongsTo(() => Location)
-    declare location: Location;
+
 
     @Column({ allowNull: false, type: DataType.INTEGER })
     declare available_days: number;
+  role: any;
 
-
-    @HasMany(() => VacationRequest)
-    declare vacation_requests: VacationRequest[];
 }

@@ -10,9 +10,10 @@ export const getAllLocations = async (_req: Request, res: Response) => {
     const locations = await Location.findAll({
       // incluye usuarios y festivos asociados 
       include: [
-        { model: User, attributes: ["id", "first_name", "last_name", "email"] },
-        { model: Holiday, attributes: ["id", "holiday_name", "holiday_date"] },
+        { model: User, as: "users", attributes: ["id", "first_name", "last_name", "email"] },
+        { model: Holiday, as: "holidays", attributes: ["id", "holiday_name", "holiday_date"] },
       ],
+
       order: [["location_name", "ASC"]],
     });
 
@@ -28,11 +29,12 @@ export const getLocationById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const location = await Location.findByPk(id, {      
+    const location = await Location.findByPk(id, {
       include: [
-        { model: User, attributes: ["id", "first_name", "last_name", "email"] },
-        { model: Holiday, attributes: ["id", "holiday_name", "holiday_date"] },
+        { model: User, as: "users", attributes: ["id", "first_name", "last_name", "email"] },
+        { model: Holiday, as: "holidays", attributes: ["id", "holiday_name", "holiday_date"] },
       ],
+
     });
 
     if (!location) {

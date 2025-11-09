@@ -1,8 +1,7 @@
 import {
-  Table, Column, Model, DataType, HasMany, AllowNull
+  Table, Column, Model, DataType, AllowNull
 } from 'sequelize-typescript';
 import type { RoleAttributes, RoleCreationAttributes } from '../types/roleInterface.js';
-import { User } from './userModel.js';
 
 @Table({
   tableName: 'roles',
@@ -18,7 +17,5 @@ export class Role
   @AllowNull(false)
   @Column({ type: DataType.STRING(255) })
   declare role_name: string;
-
-  @HasMany(() => User)
-  declare users: User[];
+ 
 }

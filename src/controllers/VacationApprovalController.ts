@@ -27,7 +27,8 @@ export const decideVacationRequest = async (req: Request, res: Response) => {
       });
     }
      // 4. AUTORIZACIÓN (Usando el ID seguro del token)
-    const approver = await User.findByPk(loggedInUserId, { include: [Role] });
+    const approver = await User.findByPk(loggedInUserId, { include: [{ model: Role, as: 'role' }]
+     });
     if (!approver) {
       await t.rollback();
       return res.status(404).json({ message: "Usuario aprobador no encontrado." });
