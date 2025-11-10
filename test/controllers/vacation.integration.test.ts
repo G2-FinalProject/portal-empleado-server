@@ -439,4 +439,196 @@ describe('Vacation Requests - Integration Tests', () => {
       expect(res.body.message).toContain('No tienes permisos para aprobar/rechazar solicitudes de otros departamentos.');
     });
   });
+
+// ==========================================
+// 6: OBTENER SOLICITUD POR ID
+// ==========================================
+describe('GET /vacations/:id - Obtener solicitud por ID', () => {
+  let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+  let requestId: number;
+
+  beforeEach(async () => {
+    await cleanDatabase();
+    seededData = await seedCoHispaniaUsers();
+
+    const request = await VacationRequest.create({
+      requester_id: seededData.userIds.employeeIDId,
+      start_date: new Date('2025-12-15'),
+      end_date: new Date('2025-12-17'),
+      requested_days: 3,
+      requester_comment: 'Vacaciones test',
+      request_status: 'pending',
+    });
+    requestId = request.id;
+  });
+
+  it('✅ Debe devolver una solicitud específica por ID', async () => {
+    const res = await request(app)
+      .get(`/vacations/${requestId}`)
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('id', requestId);
+    expect(res.body).toHaveProperty('requester_id', seededData.userIds.employeeIDId);
+    expect(res.body.requester).toHaveProperty('first_name', 'Elena');
+  });
+
+  it('❌ Debe devolver 404 si la solicitud no existe', async () => {
+    const res = await request(app)
+      .get('/vacations/99999')
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toContain('Solicitud no encontrada');
+  });
+});
+
+// ==========================================
+// 7: ACTUALIZAR SOLICITUD
+// ==========================================
+describe('PATCH /vacations/:id - Actualizar solicitud', () => {
+  let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+  let requestId: number;
+
+  beforeEach(async () => {
+    await cleanDatabase();
+    seededData = await seedCoHispaniaUsers();
+
+    const request = await VacationRequest.create({
+      requester_id: seededData.userIds.employeeIDId,
+      start_date: new Date('2025-12-15'),
+      end_date: new Date('2025-12-17'),
+      requested_days: 3,
+      requester_comment: 'Comentario original',
+      request_status: 'pending',
+    });
+    requestId = request.id;
+  });
+
+  it('✅ Debe actualizar el comentario de la solicitud', async () => {
+    const res = await request(app)
+      .patch(`/vacations/${requestId}`)
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+      .send({
+        comments: 'Comentario actualizado'
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.requester_comment).toBe('Comentario actualizado');
+  });
+
+  it('✅ Debe actualizar las fechas y recalcular requested_days', async () => {
+    const res = await request(app)
+      .patch(`/vacations/${requestId}`)
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+      .send({
+        start_date: '2025-12-16', // Martes
+        end_date: '2025-12-18',   // Jueves (3 días)
+        comments: 'Fechas modificadas'
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.start_date).toBe('2025-12-16');
+    expect(res.body.end_date).toBe('2025-12-18');
+    expect(res.body.requested_days).toBe(3);
+  });
+
+  it('❌ Debe devolver 404 si la solicitud no existe', async () => {
+    const res = await request(app)
+      .patch('/vacations/99999')
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`)
+      .send({
+        comments: 'Intentando actualizar'
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toContain('Solicitud no encontrada');
+  });
+});
+
+// ==========================================
+// 8: ELIMINAR SOLICITUD
+// ==========================================
+describe('DELETE /vacations/:id - Eliminar solicitud', () => {
+  let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+  let requestId: number;
+
+  beforeEach(async () => {
+    await cleanDatabase();
+    seededData = await seedCoHispaniaUsers();
+
+    const request = await VacationRequest.create({
+      requester_id: seededData.userIds.employeeIDId,
+      start_date: new Date('2025-12-15'),
+      end_date: new Date('2025-12-17'),
+      requested_days: 3,
+      requester_comment: 'Para eliminar',
+      request_status: 'pending',
+    });
+    requestId = request.id;
+  });
+
+  it('✅ Debe eliminar una solicitud correctamente', async () => {
+    const res = await request(app)
+      .delete(`/vacations/${requestId}`)
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toContain('eliminada exitosamente');
+
+    // Verificar que realmente se eliminó
+    const deleted = await VacationRequest.findByPk(requestId);
+    expect(deleted).toBeNull();
+  });
+
+  it('❌ Debe devolver 404 si la solicitud no existe', async () => {
+    const res = await request(app)
+      .delete('/vacations/99999')
+      .set('Authorization', `Bearer ${seededData.tokens.employeeIDToken}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toContain('Solicitud no encontrada');
+  });
+});
+
+// ==========================================
+// 9: CASOS EDGE - poco comunes
+// ==========================================
+describe('GET /vacations - Casos edge', () => {
+  let seededData: Awaited<ReturnType<typeof seedCoHispaniaUsers>>;
+
+  beforeEach(async () => {
+    await cleanDatabase();
+    seededData = await seedCoHispaniaUsers();
+  });
+
+  it('✅ Debe devolver array vacío si no hay solicitudes', async () => {
+    const res = await request(app)
+      .get('/vacations')
+      .set('Authorization', `Bearer ${seededData.tokens.adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(0);
+  });
+
+  it('✅ Manager ve array vacío si no hay solicitudes en su departamento', async () => {
+    await VacationRequest.create({
+      requester_id: seededData.userIds.employeeSistemasId,
+      start_date: new Date('2025-12-15'),
+      end_date: new Date('2025-12-17'),
+      requested_days: 3,
+      requester_comment: 'Solicitud de Sistemas',
+      request_status: 'pending',
+    });
+
+    const res = await request(app)
+      .get('/vacations')
+      .set('Authorization', `Bearer ${seededData.tokens.managerIDToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(0);
+  });
+});
+
 });
