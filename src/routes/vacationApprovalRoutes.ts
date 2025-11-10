@@ -4,9 +4,9 @@ import {  reviewVacationRequestRules } from "../validators/vacationApprovalValid
 import { handleValidationErrors } from "../middlewares/validationErrorHandler.js";
 import { checkManagerOrAdmin } from '../utils/authChecks.js';
 
-const router = express.Router();
+const vacationApprovalRouter = express.Router();
 
 
-router.patch( "/:id/review", checkManagerOrAdmin, reviewVacationRequestRules,  handleValidationErrors, decideVacationRequest);
+vacationApprovalRouter.patch( "/:id/review", checkManagerOrAdmin, reviewVacationRequestRules,  handleValidationErrors, decideVacationRequest);
 
-export default router;
+export default vacationApprovalRouter;

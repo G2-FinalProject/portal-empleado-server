@@ -20,3 +20,6 @@ certs/*
 *.sql
 *.sql.gz
 *.dump
+
+# Informe de cobertura de Jest
+coverage
