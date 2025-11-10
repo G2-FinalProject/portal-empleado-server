@@ -40,6 +40,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "tsc",
     "test": "cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --runInBand --no-cache --detectOpenHandles",
     "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --coverage --runInBand --no-cache --detectOpenHandles",
     "seed": "tsx src/database/seeders/run.ts",

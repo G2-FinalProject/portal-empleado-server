@@ -1,0 +1,44 @@
+name: 🚀 Build y Publicar Imagen Docker
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/dockerizacion # mi rama
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name:  Descargar el código
+        uses: actions/checkout@v4
+
+      - name:  Poner el nombre del repo en minúsculas
+        id: string
+        run: echo "repository_lowercase=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+    
+      - name:  Crear etiqueta válida para Docker
+        id: tag_name
+        run: |
+          CLEAN_TAG=${GITHUB_REF_NAME//\//-}
+          echo "TAG=$CLEAN_TAG" >> $GITHUB_OUTPUT
+
+      - name:  Iniciar sesión en el Almacén (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name:  Construir y Guardar la imagen
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ steps.string.outputs.repository_lowercase }}:${{ steps.tag_name.outputs.TAG }}

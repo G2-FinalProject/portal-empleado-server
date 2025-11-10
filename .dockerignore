@@ -1,0 +1,21 @@
+Archivo: .dockerignore
+
+# Dependencias locales que no deben ir en la imagen
+node_modules
+
+# Código compilado localmente (lo generaremos dentro de Docker)
+dist
+
+# Archivos de Git
+.git
+.gitignore
+
+# Variables de entorno y logs
+.env
+.env.test
+.env.example
+npm-debug.log
+*.log
+
+# Configuración de tu editor
+.vscode
