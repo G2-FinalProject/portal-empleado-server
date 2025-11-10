@@ -22,9 +22,9 @@ export const getHolidayById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const holiday = await Holiday.findByPk(id, {
-            include: [{ model: Location, attributes: ["id", "location_name"] }],
-        });
+       const holiday = await Holiday.findByPk(id, {
+  include: [{ model: Location, as: "location", attributes: ["id", "location_name"] }],
+});
 
         if (!holiday) {
             return res.status(404).json({ message: "Holiday not found." });
