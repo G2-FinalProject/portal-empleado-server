@@ -5,6 +5,7 @@ import { seedDepartments } from './departmentSeeder.js';
 import { seedLocations } from './locationSeeder.js';
 import { seedUsers } from './userSeeder.js';
 import { seedHolidays } from './holidaySeeder.js';
+import { seedVacationRequests } from './vacationRequestSeeder.js';
 
 export async function runSeeders() {
   try {
@@ -23,6 +24,7 @@ export async function runSeeders() {
     await seedLocations();
     await seedUsers();
     await seedHolidays();
+    await seedVacationRequests();
 
     console.log('\n🎉 All seeders executed successfully!');
     console.log('\n📊 Summary:');
