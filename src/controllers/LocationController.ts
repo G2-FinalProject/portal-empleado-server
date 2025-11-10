@@ -95,8 +95,8 @@ export const updateLocation = async (req: Request, res: Response) => {
     // Fetch ubicacion actualizada con datos asociados 
     const updated = await Location.findByPk(id, {
       include: [
-        { model: User, attributes: ["id", "first_name", "last_name", "email"] },
-        { model: Holiday, attributes: ["id", "holiday_name", "holiday_date"] },
+        { model: User, as: 'users', attributes: ['id', 'first_name', 'last_name', 'email'] },
+        { model: Holiday, as: 'holidays', attributes: ['id', 'holiday_name', 'holiday_date'] },
       ],
     });
 
