@@ -1,26 +1,26 @@
-# Borramos el 'version' obsoleto
+
 services:
-  # 1. El servicio de tu aplicación (El único que necesitamos)
+  
   app:
     build: .
     container_name: portal-empleado-app
     ports:
       - "3000:3000" # Mapea el puerto de tu app
     
-    # Le pasamos las variables de tu .env
+    
     environment:
-      # --- Tus variables de .env ---
+      # --- Las variables de .env ---
       DB_NAME: ${DB_NAME}         # 'vacation_portal'
       USER_DB: ${USER_DB}         # 'root'
-      PASSWORD_DB: ${PASSWORD_DB} # 'alba2005'
+      PASSWORD_DB: ${PASSWORD_DB} 
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES: ${JWT_EXPIRES}
       CORS_ORIGIN: ${CORS_ORIGIN}
       DB_DIALECT: ${DB_DIALECT}   # 'mysql'
       
-      # --- ¡EL GRAN CAMBIO! ---
-      # 'host.docker.internal' es la dirección mágica
-      # para que el contenedor se conecte al 'localhost' de tu PC
+      
+    
+    
       HOST: host.docker.internal 
 
       PORT: 3000
