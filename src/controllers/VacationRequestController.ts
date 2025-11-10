@@ -12,7 +12,7 @@ export const createVacationRequest = async (req: Request, res: Response) => {
     const requester_id = req.user!.id;
     const { start_date, end_date, comments } = req.body;
 
-       // 🔹 Crear la solicitud si tiene saldo suficiente
+    // 🔹 Crear la solicitud si tiene saldo suficiente
     const newRequest = await VacationRequest.create({
       requester_id,
       start_date,
@@ -35,9 +35,37 @@ export const createVacationRequest = async (req: Request, res: Response) => {
 /**
  * 📋 Obtener todas las solicitudes con info del usuario
  */
-export const getAllVacationRequests = async (_req: Request, res: Response) => {
+export const getAllVacationRequests = async (req: Request, res: Response) => {
   try {
+
+    /*Importante para filtrar la visibilidad: 
+   - Admin: No pone filtro → ve todo
+   - Manager: Filtra por `department_id` → solo ve su departamento
+   - Employee: Filtra por `requester_id` → solo ve sus propias solicitudes
+    */
+    const loggedInUserId = req.user!.id;
+    const loggedInUserRole = req.user!.role;
+    const loggedInUser = await User.findByPk(loggedInUserId);
+    if (!loggedInUser) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    let whereClause = {};
+    if (loggedInUserRole === 3) {
+      whereClause = { requester_id: loggedInUserId };
+    } 
+    else if (loggedInUserRole === 2) {
+      const usersInDepartment = await User.findAll({
+        where: { department_id: loggedInUser.department_id },
+        attributes: ['id']
+      });
+      
+      const userIds = usersInDepartment.map(user => user.id);
+      whereClause = { requester_id: userIds };
+    }
+
     const requests = await VacationRequest.findAll({
+      where: whereClause,
       include: [
         {
           model: User,
@@ -58,11 +86,11 @@ export const getAllVacationRequests = async (_req: Request, res: Response) => {
 
     res.status(200).json(requests);
   } catch (error: any) {
-  console.error("❌ Error al obtener solicitudes:", error.message || error);
-  res.status(500).json({ 
-    message: "Error al obtener las solicitudes.",
-    error: error.message || error 
-  });
+    console.error("❌ Error al obtener solicitudes:", error.message || error);
+    res.status(500).json({
+      message: "Error al obtener las solicitudes.",
+      error: error.message || error
+    });
   }
 };
 
@@ -107,7 +135,7 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Solicitud no encontrada." });
     }
 
-     const payload: Partial<VacationRequest> & {
+    const payload: Partial<VacationRequest> & {
       requester_comment?: string | null;
       request_status?: VacationStatus;
     } = {
@@ -115,7 +143,7 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
       requester_comment: comments ?? request.requester_comment,
     };
 
-     if (start_date && end_date) {
+    if (start_date && end_date) {
       payload.start_date = start_date;
       payload.end_date = end_date;
       payload.requested_days = req.body.requested_days; // <- recalculado por el middleware
@@ -126,7 +154,7 @@ export const updateVacationRequest = async (req: Request, res: Response) => {
         // no lo incluimos en payload => no se actualiza
       }
     }
-    
+
     await request.update(payload as any);
 
 
@@ -156,10 +184,10 @@ export const deleteVacationRequest = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al eliminar la solicitud." });
   }
 };
- 
 
-  // Obtener SOLO las solicitudes del usuario autenticado
- 
+
+// Obtener SOLO las solicitudes del usuario autenticado
+
 export const getMyVacationRequests = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id; // ← El ID viene del token JWT (middleware isAuthenticated)
@@ -181,9 +209,9 @@ export const getMyVacationRequests = async (req: Request, res: Response) => {
     res.status(200).json(requests);
   } catch (error: any) {
     console.error("❌ Error al obtener mis solicitudes:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error al obtener tus solicitudes.",
-      error: error.message || error 
+      error: error.message || error
     });
   }
 };
