@@ -406,7 +406,7 @@ describe('Vacation Requests - Integration Tests', () => {
         });
 
       expect(res.status).toBe(403); // Forbidden
-      expect(res.body.message).toContain('MANAGER solo puede aprobar solicitudes de su mismo departamento');
+      expect(res.body.message).toContain('No tienes permisos para aprobar/rechazar solicitudes de otros departamentos.');
     });
 
     it('✅ Manager Sistemas PUEDE aprobar solicitud de su departamento', async () => {
@@ -436,7 +436,7 @@ describe('Vacation Requests - Integration Tests', () => {
         });
 
       expect(res.status).toBe(403); // Forbidden
-      expect(res.body.message).toContain('MANAGER solo puede aprobar solicitudes de su mismo departamento');
+      expect(res.body.message).toContain('No tienes permisos para aprobar/rechazar solicitudes de otros departamentos.');
     });
   });
 });

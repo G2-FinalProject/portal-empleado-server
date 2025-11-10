@@ -7,7 +7,7 @@ import { User } from '../../src/models/userModel';
 import { tokenFor } from '../utils';
 
 /**
- * 🏢 Crea un escenario completo de CoHispania para tests
+ * Crea un escenario completo de CoHispania para tests
  * 
  * Estructura:
  * - 3 Roles (Admin, Manager, Employee)
@@ -22,7 +22,7 @@ export async function seedCoHispaniaUsers() {
   const hashedPassword = await bcrypt.hash('CoHispania2025', 10);
 
   // ==========================================
-  // 1️⃣ ROLES (con IDs fijos para los middlewares)
+  // ROLES (con IDs fijos para los middlewares)
   // ==========================================
   await Role.findOrCreate({ 
     where: { id: 1 }, 
@@ -38,7 +38,7 @@ export async function seedCoHispaniaUsers() {
   });
 
   // ==========================================
-  // 2️⃣ DEPARTAMENTOS (estructura real de CoHispania)
+  // DEPARTAMENTOS (estructura real de CoHispania)
   // ==========================================
   const deptID = await Department.create({ department_name: 'I+D' });
   const deptSistemas = await Department.create({ department_name: 'Sistemas' });
@@ -48,17 +48,17 @@ export async function seedCoHispaniaUsers() {
   const deptControl = await Department.create({ department_name: 'Control' });
 
   // ==========================================
-  // 3️⃣ UBICACIONES (poblaciones reales)
+  // UBICACIONES (poblaciones reales)
   // ==========================================
   const locMadrid = await Location.create({ location_name: 'Madrid' });
   const locBarcelona = await Location.create({ location_name: 'Barcelona' });
   const locPontevedra = await Location.create({ location_name: 'Pontevedra' });
 
   // ==========================================
-  // 4️⃣ USUARIOS
+  // USUARIOS
   // ==========================================
 
-  // 👤 ADMIN - Adela (Administradora global)
+  // ADMIN - Adela (Administradora global)
   const admin = await User.create({
     first_name: 'Adela',
     last_name: 'Test',
@@ -70,7 +70,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 23,
   });
 
-  // 👤 MANAGER I+D - Manuel (Responsable de I+D en Madrid)
+  // MANAGER I+D - Manuel (Responsable de I+D en Madrid)
   const managerID = await User.create({
     first_name: 'Manuel',
     last_name: 'Test',
@@ -82,7 +82,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 22,
   });
 
-  // 👤 MANAGER Sistemas - Mariana (Responsable de Sistemas en Barcelona)
+  // MANAGER Sistemas - Mariana (Responsable de Sistemas en Barcelona)
   const managerSistemas = await User.create({
     first_name: 'Mariana',
     last_name: 'Test',
@@ -94,7 +94,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 22,
   });
 
-  // 👤 EMPLOYEE I+D - Elena  (Empleada de I+D en Madrid)
+  // EMPLOYEE I+D - Elena  (Empleada de I+D en Madrid)
   const employeeID = await User.create({
     first_name: 'Elena',
     last_name: 'Test',
@@ -106,7 +106,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 23,
   });
 
-  // 👤 EMPLOYEE Sistemas - Ernesto (Empleado de Sistemas en Barcelona)
+  // EMPLOYEE Sistemas - Ernesto (Empleado de Sistemas en Barcelona)
   const employeeSistemas = await User.create({
     first_name: 'Ernesto',
     last_name: 'Test',
@@ -118,7 +118,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 23,
   });
 
-  // 👤 EMPLOYEE Contabilidad - Elisa (Empleada de Contabilidad en Pontevedra)
+  // EMPLOYEE Contabilidad - Elisa (Empleada de Contabilidad en Pontevedra)
   const employeeContabilidad = await User.create({
     first_name: 'Elisa',
     last_name: 'Test',
@@ -130,7 +130,7 @@ export async function seedCoHispaniaUsers() {
     available_days: 23,
   });
 
-  // 👤 EMPLOYEE Gestión - Eduardo (Empleado de Gestión en Madrid)
+  // EMPLOYEE Gestión - Eduardo (Empleado de Gestión en Madrid)
   const employeeGestion = await User.create({
     first_name: 'Eduardo',
     last_name: 'Test',
@@ -143,7 +143,7 @@ export async function seedCoHispaniaUsers() {
   });
 
   // ==========================================
-  // 5️⃣ GENERAR TOKENS
+  // GENERAR TOKENS
   // ==========================================
   const adminToken = tokenFor({ id: admin.id, role: 1 });
   const managerIDToken = tokenFor({ id: managerID.id, role: 2 });
@@ -154,7 +154,7 @@ export async function seedCoHispaniaUsers() {
   const employeeGestionToken = tokenFor({ id: employeeGestion.id, role: 3 });
 
   // ==========================================
-  // 6️⃣ RETURN - Datos organizados
+  // RETURN - Datos organizados
   // ==========================================
   return {
     // USUARIOS (objetos completos)
