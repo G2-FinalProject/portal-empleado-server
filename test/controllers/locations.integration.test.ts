@@ -9,6 +9,7 @@ import { Location } from '../../src/models/locationModel';
 import { setupTestDatabase, cleanupTestDatabase } from '../helpers/setupDatabase';
 import { seedAdminAndToken } from '../helpers/seedAdminAndToken';
 import bcrypt from 'bcrypt';
+import { seedUserAndToken } from '../helpers/seedUserAndToken';
 
 const app = express();
 app.use(express.json());
@@ -41,27 +42,18 @@ describe('Locations API', () => {
     locId = seedData.locId;
     deptId = seedData.deptId;
 
-    // Crear usuario empleado para tests de permisos
-    const hashedPassword = await bcrypt.hash('employee123', 10);
-    await User.create({
-      first_name: 'Employee',
-      last_name: 'Test',
+    const employeeData = await seedUserAndToken({
+      app,
+      deptId,
+      locId,
       email: 'employee@test.com',
-      password_hash: hashedPassword,
-      role_id: 3,
-      department_id: deptId,
-      location_id: locId,
-      available_days: 23,
+      password: 'employee123',
+      roleId: 3,
     });
 
-    // Obtener token de employee
-    const employeeLoginRes = await request(app)
-      .post('/auth/login')
-      .send({ email: 'employee@test.com', password: 'employee123' });
-
-    employeeToken = employeeLoginRes.body.token;
+    employeeToken = employeeData.token;
   });
-
+  
   // ===== GET /locations =====
   it('GET /locations - admin debe recibir 200 y lista con includes', async () => {
     const res = await request(app)
