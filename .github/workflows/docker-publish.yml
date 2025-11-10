@@ -43,4 +43,4 @@ jobs:
           
           #  La "Etiqueta" de la imagen
           # (ej: ghcr.io/g2-finalproject/portal-empleado-server:develop)
-          tags: ghcr.io/${{ steps.string.outputs.repository_lowercase }}:${{ github.ref_name }}
+          tags: ghcr.io/${{ steps.string.outputs.repository_lowercase }}:${{ github.ref_name//\//- }}
