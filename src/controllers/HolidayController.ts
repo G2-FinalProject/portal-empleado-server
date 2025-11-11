@@ -13,7 +13,7 @@ export const getAllHolidays = async (_req: Request, res: Response) => {
         res.status(200).json(holidays);
     } catch (error) {
         console.error("Error fetching holidays:", error);
-        res.status(500).json({ message: "Error fetching holidays." });
+        res.status(500).json({ message: "Error al cargar los festivos." });
     }
 };
 
@@ -27,13 +27,13 @@ export const getHolidayById = async (req: Request, res: Response) => {
 });
 
         if (!holiday) {
-            return res.status(404).json({ message: "Holiday not found." });
+            return res.status(404).json({ message: "Festivo no encontrado." });
         }
 
         res.status(200).json(holiday);
     } catch (error) {
         console.error("Error fetching holiday:", error);
-        res.status(500).json({ message: "Error fetching holiday." });
+        res.status(500).json({ message: "Error al obtener la información del festivo." });
     }
 };
 
@@ -47,17 +47,17 @@ export const createHoliday = async (req: Request, res: Response) => {
 
         const location = await Location.findByPk(location_id);
         if (!location) {
-            return res.status(400).json({ message: "Location does not exist." });
+            return res.status(400).json({ message: "La población especificada no existe" });
         }
 
-        // locatio_id y holiday deben ser unicos 
+        // locatio_id y holiday deben ser unicos
         const duplicated = await Holiday.findOne({
             where: { location_id, holiday_date },
         });
         if (duplicated) {
             return res
                 .status(400)
-                .json({ message: "A holiday already exists for that date in this location." });
+                .json({ message: "Ya existe un festivo registrado para esa fecha en esta población." });
         }
 
         const newHoliday = await Holiday.create({ holiday_name, holiday_date, location_id });
@@ -70,7 +70,7 @@ export const createHoliday = async (req: Request, res: Response) => {
         res.status(201).json(created);
     } catch (error) {
         console.error("Error creating holiday:", error);
-        res.status(500).json({ message: "Error creating holiday." });
+        res.status(500).json({ message: "Error inesperado al crear el festivo." });
     }
 };
 
@@ -85,13 +85,13 @@ export const updateHoliday = async (req: Request, res: Response) => {
 
         const holiday = await Holiday.findByPk(id);
         if (!holiday) {
-            return res.status(404).json({ message: "Holiday not found." });
+            return res.status(404).json({ message: "Festivo no encontrado para actualizar." });
         }
 
         if (typeof location_id === "number") {
             const loc = await Location.findByPk(location_id);
             if (!loc) {
-                return res.status(400).json({ message: "Location does not exist." });
+                return res.status(400).json({ message: "La población seleccionada no existe." });
             }
         }
 
@@ -109,7 +109,7 @@ export const updateHoliday = async (req: Request, res: Response) => {
             if (existsSame && existsSame.id !== holiday.id) {
                 return res
                     .status(400)
-                    .json({ message: "Another holiday already exists for that date in this location." });
+                    .json({ message: "Ya existe otro festivo para esa fecha en la ubicación seleccionada." });
             }
         }
 
@@ -126,7 +126,7 @@ export const updateHoliday = async (req: Request, res: Response) => {
         if (typeof holiday_date === "string") {
             const d = new Date(holiday_date);
             if (Number.isNaN(d.getTime())) {
-                return res.status(422).json({ message: "holiday_date must be a valid date (YYYY-MM-DD)" });
+                return res.status(422).json({ message: "El campo holiday_date debe ser una fecha válida." });
             }
             updateData.holiday_date = d; // <- Date para Sequelize (DATEONLY)
         }
@@ -145,7 +145,7 @@ export const updateHoliday = async (req: Request, res: Response) => {
         return res.status(200).json(updated);
     } catch (error) {
         console.error("Error updating holiday:", error);
-        return res.status(500).json({ message: "Error updating holiday." });
+        return res.status(500).json({ message: "Error inesperado al actualizar el festivo." });
     }
 };
 
@@ -155,14 +155,14 @@ export const deleteHoliday = async (req: Request, res: Response) => {
 
         const holiday = await Holiday.findByPk(id);
         if (!holiday) {
-            return res.status(404).json({ message: "Holiday not found." });
+            return res.status(404).json({ message: "Festivo no encontrado para eliminar." });
         }
 
         await holiday.destroy();
-        res.status(200).json({ message: "Holiday deleted successfully." });
+        res.status(200).json({ message: "Festivo eliminado correctamente." });
     } catch (error) {
         console.error("Error deleting holiday:", error);
-        res.status(500).json({ message: "Error deleting holiday." });
+        res.status(500).json({ message: "Error inesperado al eliminar el festivo." });
     }
 };
 
