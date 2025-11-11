@@ -6,7 +6,7 @@ export async function seedRoles() {
   const roles = [
     { id: 1, role_name: 'Admin' },
     { id: 2, role_name: 'Manager' },
-    { id: 3, role_name: 'Empleado' },
+    { id: 3, role_name: 'Employee' },
   ];
 
   for (const role of roles) {
