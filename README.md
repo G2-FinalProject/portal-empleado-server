@@ -536,7 +536,25 @@ git commit -m "feat: add vacation approval endpoint with manager role validation
 
 ---
 
-## Licencia
+## Licencia y Desarrolladoras
+
+- **Ana Muruzabal Gómez**  
+  [LinkedIn](https://www.linkedin.com/in/anamuruzabal)  
+
+- **Gabriela Hernández Berbesi**  
+  [LinkedIn](https://www.linkedin.com/in/gabriela-hernandez-67aa491b3/) | [GitHub](https://github.com/gabriela-her)
+
+- **Gema Yébenes Caballero**  
+  [LinkedIn](https://www.linkedin.com/in/gema-yébenes-caballero-83b6a6100/) | [GitHub](https://github.com/gemayc)
+
+- **Maryori Cruz Eguizabal**  
+  [LinkedIn](https://www.linkedin.com/in/maryori-cruz-6b440116b/) | [GitHub](https://github.com/MaryoriCruz?tab=repositories)
+
+- **Olga Ramírez Rodríguez**  
+  [LinkedIn](https://www.linkedin.com/in/olga-ramirez-rodriguez) | [GitHub](https://github.com/olgararo)
+
+- **Rocío Alondra Omonte Coronel**  
+  [GitHub](https://github.com/Rocio-Coronel)
 
  Proyecto educativo de FemCoders de Factoría F5 Madrid.
 
@@ -551,3 +569,7 @@ Cohispania, por brindarnos un caso de uso auténtico y permitirnos trabajar sobr
 A las personas que participaron en las sesiones de feedback y validación funcional, contribuyendo a que el producto esté alineado con la experiencia real del usuario final.
 
 ---
+## Documentación de la API
+Puedes consultar la documentación completa de la API en el siguiente enlace:
+
+🔗 [Ver en Postman](https://documenter.getpostman.com/view/48320294/2sB3WtseBW#97b057b0-d973-4ba9-86fc-4a77f9dcb1ae)
