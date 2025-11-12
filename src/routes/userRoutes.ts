@@ -8,7 +8,7 @@ const userRouter = express.Router();
 
 userRouter.get('/:id/vacations/summary',checkAuth, getVacationSummary);
 userRouter.get('/', checkManagerOrAdmin, getUsers);
-userRouter.get('/:id', checkManagerOrAdmin, getUserById);
+userRouter.get('/:id', checkAuth, getUserById);
 
 userRouter.post('/',checkAdmin, createUserRules, handleValidationErrors, createUser);
 
