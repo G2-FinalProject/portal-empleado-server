@@ -3,28 +3,30 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+
     "rootDir": "./src",
     "outDir": "dist",
+
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
+
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "useDefineForClassFields": true,
-    "isolatedModules": false,
-
+    "useDefineForClassFields": false,
 
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
+
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+
     //  desactiva estas dos para evitar choque con reflect-metadata y decoradores
-    
-    // "noUncheckedSideEffectImports": false,
-    "types": [
-      "node"
-    ]
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": false,
+
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts", "database/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "test/**/*", "dist"]
+  "include": [ "src//*", "database//*", "app.ts" ],
+  "exclude": ["node_modules", "test/**/*","dist"]
 }
