@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { createLocation, getAllLocations, getLocationById, updateLocation, deleteLocation } from '../controllers/LocationController.js';
-import { checkAdmin, checkManagerOrAdmin } from '../utils/authChecks.js';
+import { checkAdmin, checkManagerOrAdmin, checkAuth } from '../utils/authChecks.js';
 import { handleValidationErrors } from '../middlewares/validationErrorHandler.js';
 
 const locationRouter = Router();
 
 locationRouter.get('/',checkManagerOrAdmin, getAllLocations);
-locationRouter.get('/:id', checkManagerOrAdmin, getLocationById);
+locationRouter.get('/:id', checkAuth, getLocationById);
 
 locationRouter.post('/', checkAdmin, handleValidationErrors, createLocation);
 
